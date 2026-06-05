@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">PhysicalComputing</string>
+    <string name="music_app_name">Music</string>
     <string name="music_app_description">Listen to your favorite music</string>
+    <string name="casino_app_name">Casino</string>
     <string name="casino_app_description">Play a game of chance</string>
 </resources>

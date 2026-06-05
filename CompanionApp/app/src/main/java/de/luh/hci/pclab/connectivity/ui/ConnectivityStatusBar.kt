@@ -12,7 +12,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import de.luh.hci.pclab.radio.data.ConnectionState
+import de.luh.hci.pclab.radio.model.Device
+import de.luh.hci.pclab.radio.model.DeviceInfo
+import de.luh.hci.pclab.ui.theme.AppTheme
+
 
 @Composable
 fun ConnectivityStatusBar(
@@ -26,7 +32,7 @@ fun ConnectivityStatusBar(
     }
     
     val statusText = if (connectedDevice != null) {
-        "Connected to: ${connectedDevice.name}"
+        "Connected to: ${connectedDevice.info.name}"
     } else {
         "Not Connected"
     }
@@ -44,6 +50,29 @@ fun ConnectivityStatusBar(
             color = if (connectedDevice != null) Color.White else MaterialTheme.colorScheme.onError,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ConnectivityStatusBarConnectedPreview() {
+    AppTheme {
+        ConnectivityStatusBar(
+            connectedDevice = Device(
+                info = DeviceInfo(name = "ESP32-Radio", address = "00:11:22:33:44:55"),
+                coins = 10
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ConnectivityStatusBarDisconnectedPreview() {
+    AppTheme {
+        ConnectivityStatusBar(
+            connectedDevice = null
         )
     }
 }

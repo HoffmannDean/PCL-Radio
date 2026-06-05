@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -22,16 +22,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-
-data class Device(val name: String, val address: String)
+import de.luh.hci.pclab.radio.data.ConnectionState
+import de.luh.hci.pclab.radio.model.DeviceInfo
 
 @Composable
 fun ConnectivityView(
-    devices: List<Device>,
-    onDeviceSelected: (Device) -> Unit,
-    modifier: Modifier = Modifier
+    devices: List<DeviceInfo>,
+    onDeviceSelected: (DeviceInfo) -> Unit,
+    connectionState: ConnectionState,
+    modifier: Modifier = Modifier,
 ) {
-    var selectedDevice by remember { mutableStateOf<Device?>(null) }
+    var selectedDevice by remember { mutableStateOf<DeviceInfo?>(null) }
 
     Column(
         modifier = modifier
@@ -43,7 +44,7 @@ fun ConnectivityView(
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-        
+
         Text(
             text = "Please select a device from the list below:",
             style = MaterialTheme.typography.bodyMedium,
@@ -61,15 +62,15 @@ fun ConnectivityView(
             LazyColumn(
                 modifier = Modifier.weight(1f)
             ) {
-                items(devices) { device ->
+                items(devices.size) { index ->
                     DeviceListItem(
-                        device = device,
-                        selected = device == selectedDevice,
+                        device = devices[index],
+                        selected = devices[index] == selectedDevice,
                         onClick = {
-                            if (device == selectedDevice) {
+                            if (devices[index] == selectedDevice) {
                                 selectedDevice = null;
                             } else {
-                                selectedDevice = device
+                                selectedDevice = devices[index]
                             }
                         }
                     )
@@ -80,19 +81,23 @@ fun ConnectivityView(
 
         Button(
             onClick = { selectedDevice?.let { onDeviceSelected(it) } },
-            enabled = selectedDevice != null,
+            enabled = selectedDevice != null && connectionState == ConnectionState.DISCONNECTED,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp)
         ) {
-            Text("Connect")
+            when(connectionState) {
+                ConnectionState.DISCONNECTED -> Text("Connect")
+                ConnectionState.CONNECTING -> CircularProgressIndicator()
+                ConnectionState.CONNECTED -> Text("Connected")
+            }
         }
     }
 }
 
 @Composable
 fun DeviceListItem(
-    device: Device,
+    device: DeviceInfo,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -113,12 +118,13 @@ fun DeviceListItem(
 @Composable
 fun ConnectivityViewPreview() {
     val dummyDevices = listOf(
-        Device("ESP32-Sensor-01", "00:1A:7D:DA:71:13"),
-        Device("ESP32-Sensor-02", "00:1A:7D:DA:71:14"),
-        Device("ESP32-Sensor-03", "00:1A:7D:DA:71:15"),
+        DeviceInfo("ESP32-Sensor-01", "00:1A:7D:DA:71:13"),
+        DeviceInfo("ESP32-Sensor-02", "00:1A:7D:DA:71:14"),
+        DeviceInfo("ESP32-Sensor-03", "00:1A:7D:DA:71:15"),
     )
     ConnectivityView(
         devices = dummyDevices,
+        connectionState = ConnectionState.DISCONNECTED,
         onDeviceSelected = {}
     )
 }
