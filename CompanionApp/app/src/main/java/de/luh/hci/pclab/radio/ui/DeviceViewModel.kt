@@ -1,12 +1,13 @@
-package de.luh.hci.pclab.radio.data
+package de.luh.hci.pclab.radio.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import de.luh.hci.pclab.RadioApp
+import de.luh.hci.pclab.radio.data.ConnectionState
+import de.luh.hci.pclab.radio.data.Esp32Repository
 import de.luh.hci.pclab.radio.model.Device
 import de.luh.hci.pclab.radio.model.DeviceInfo
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +26,10 @@ class DeviceViewModel(
 
     val availableDevices: StateFlow<List<DeviceInfo>> = esp32repo.availableDevices
     val connectionState = esp32repo.connectionState
+
+    init {
+        searchAvailableDevices()
+    }
 
     fun searchAvailableDevices() {
         esp32repo.startScan()
@@ -50,7 +55,8 @@ class DeviceViewModel(
     companion object {
         val Factory : ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val esp32repo = (this[APPLICATION_KEY] as RadioApp).esp32Repo
+                val esp32repo =
+                    (this[ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY] as RadioApp).esp32Repo
                 DeviceViewModel(esp32repo)
             }
         }
