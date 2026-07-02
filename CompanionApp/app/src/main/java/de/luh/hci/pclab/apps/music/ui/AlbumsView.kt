@@ -37,14 +37,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.text.style.TextAlign
-
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Scaffold
+import kotlin.Unit
 
 // Shows multiple albums and allows updates, add, delete...
 @Composable
 
 fun AlbumsContent(
     albums: List<Album>,
-    onAlbumClick: (Album) -> Unit
+    onAlbumClick: (Album) -> Unit,
+    onHomeClick: () -> Unit,
+    onAlbumsClick: () -> Unit,
+    onSongsClick: () -> Unit,
+    onPlayClick: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val filteredAlbums = albums.filter {
@@ -53,47 +63,82 @@ fun AlbumsContent(
 
     val darkBg = MaterialTheme.colorScheme.surfaceContainerHighest
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(darkBg)
-                .padding(top = 25.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "All Records",
-                style = MaterialTheme.typography.headlineMedium
-                            )
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text("Search") },
-                modifier = Modifier.fillMaxWidth().padding(
-                    top = 12.dp, bottom = 15.dp, start = 20.dp, end = 20.dp,
-                ),
-                singleLine = true
-            )
-        }
-
-        LazyColumn(
-            contentPadding = PaddingValues(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(filteredAlbums, key = { it.id }) { album ->
-                AlbumRow(album = album, onClick = { onAlbumClick(album) })
+    Scaffold(
+        bottomBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(darkBg)
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                IconButton(onClick = onHomeClick) {
+                    Icon(Icons.Filled.Home, contentDescription = "Home")
+                }
+                IconButton(onClick = onAlbumsClick) {
+                    Icon(Icons.Filled.LibraryMusic, contentDescription = "Albums")
+                }
+                IconButton(onClick = onSongsClick) {
+                    Icon(Icons.Filled.MusicNote, contentDescription = "Songs")
+                }
+                IconButton(onClick = onPlayClick) {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = "Play")
+                }
             }
         }
+    ) { innerPadding ->
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+               Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(darkBg)
+                    .padding(top = 25.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "All Records",
+                    style = MaterialTheme.typography.headlineMedium
+                                )
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text("Search") },
+                    modifier = Modifier.fillMaxWidth().padding(
+                        top = 12.dp, bottom = 15.dp, start = 20.dp, end = 20.dp,
+                    ),
+                    singleLine = true
+                )
+            }
+
+            LazyColumn(
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(filteredAlbums, key = { it.id }) { album ->
+                    AlbumRow(album = album, onClick = { onAlbumClick(album) })
+                }
+            }}
     }
 }
 
 @Composable
 fun AlbumsView(
     onAlbumClick: (Album) -> Unit,
+    onHomeClick: () -> Unit,
+    onAlbumsClick: () -> Unit,
+    onSongsClick: () -> Unit,
+    onPlayClick: () -> Unit,
     viewModel: AlbumsViewModel = viewModel(factory = AlbumsViewModel.Factory)
 ) {
     val albums by viewModel.albums.collectAsStateWithLifecycle()
-    AlbumsContent(albums = albums, onAlbumClick = onAlbumClick)
+    AlbumsContent(
+        albums = albums,
+        onAlbumClick = onAlbumClick,
+        onHomeClick = onHomeClick,
+        onAlbumsClick = onAlbumsClick,
+        onSongsClick = onSongsClick,
+        onPlayClick = onPlayClick
+    )
 }
 
 @Composable
@@ -145,6 +190,12 @@ private fun AlbumRow(
 
                 Spacer(modifier = Modifier.weight(1f))
 
+                /*val minutes = song.durationMs / 60000
+                val seconds = (song.durationMs % 60000) / 1000
+
+                Text(
+                    text = "${song.album} - %02d:%02d".format(minutes, seconds),*/
+
                 Text(
                     text = "${album.songCount} Songs - 00:00 Min", //${album.fullTime}",
                     style = MaterialTheme.typography.bodySmall,
@@ -153,6 +204,7 @@ private fun AlbumRow(
                     textAlign = TextAlign.End
                 )
             }
+
         }
     }
 }
@@ -177,6 +229,10 @@ private fun AlbumCover(modifier: Modifier = Modifier) {
 fun AlbumsContentPreview() {
     AlbumsContent(
         albums = listOf(Album(id = 1, name = "Sample 1"), Album(id = 2, name = "Sample 2"), Album(id = 3, name = "Sample 3"), Album(id = 4, name = "Sample 4")),
-        onAlbumClick = {}
+        onAlbumClick = {},
+        onHomeClick = {},
+        onAlbumsClick = {},
+        onSongsClick = {},
+        onPlayClick = {}
     )
 }

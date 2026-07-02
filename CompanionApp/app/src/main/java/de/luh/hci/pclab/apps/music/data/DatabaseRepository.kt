@@ -36,8 +36,10 @@ class DatabaseRepository(
     suspend fun removeSongFromAlbum(song: Song) =
         songDao.delete(song.toEntity())
 
-    suspend fun queryDeviceSongs(albumId: Long): List<Song> = withContext(Dispatchers.IO) {
-        val alreadyAdded = songDao.getMediaStoreIdsForAlbum(albumId).toSet()
+
+
+    suspend fun queryDeviceSongs(albumId: Long? = null): List<Song> = withContext(Dispatchers.IO) {
+        val alreadyAdded = if (albumId != null) songDao.getMediaStoreIdsForAlbum(albumId).toSet() else emptySet()
         val songs = mutableListOf<Song>()
 
         val projection = arrayOf(
@@ -74,7 +76,7 @@ class DatabaseRepository(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, msId
                 )
                 songs.add(Song(
-                    albumId      = albumId,
+                    albumId      = albumId ?: 0L,
                     mediaStoreId = msId,
                     uri          = uri,
                     title        = cursor.getString(titleCol) ?: "Unknown",

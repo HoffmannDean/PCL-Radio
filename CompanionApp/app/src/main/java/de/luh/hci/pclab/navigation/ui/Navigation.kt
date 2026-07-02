@@ -22,10 +22,8 @@ import de.luh.hci.pclab.radio.data.ConnectionState
 import de.luh.hci.pclab.radio.ui.DeviceViewModel
 import kotlinx.serialization.Serializable
 import androidx.navigation.toRoute
-import de.luh.hci.pclab.apps.music.ui.AlbumDetailView
-import de.luh.hci.pclab.apps.music.ui.AlbumDetailViewModel
+import de.luh.hci.pclab.apps.music.ui.SongsView
 import de.luh.hci.pclab.apps.music.ui.AlbumsView
-import de.luh.hci.pclab.apps.music.ui.PlayerViewModel
 import kotlinx.serialization.json.Json
 
 @Serializable
@@ -39,7 +37,7 @@ object MusicApp
 
 
 @Serializable
-data class AlbumDetail(
+data class Songs(
     val albumJson: String,
 )
 
@@ -120,16 +118,29 @@ fun Navigation(
             }
 
             composable<MusicApp> {
-                AlbumsView(onAlbumClick = { album ->
+                AlbumsView(
+                    onAlbumClick = { album ->
                     val albumJson = Json.encodeToString(album)
-                    navController.navigate(AlbumDetail(albumJson))
-                })
-            }
+                    navController.navigate(Songs(albumJson))},
+                    onHomeClick = {},
+                    onAlbumsClick = {},
+                    onSongsClick = {},
+                    onPlayClick = {}
+                    )
+                }
 
-            composable<AlbumDetail> { backStackEntry ->
-                val route = backStackEntry.toRoute<AlbumDetail>()
+
+            composable<Songs> { backStackEntry ->
+                val route = backStackEntry.toRoute<Songs>()
                 val album = Json.decodeFromString<Album>(route.albumJson)
-                AlbumDetailView(album = album)
+                SongsView(
+                    album = album,
+                    onSongClick = {},
+                    onHomeClick = {},
+                    onAlbumsClick = {},
+                    onSongsClick = {},
+                    onPlayClick = {}
+                )
             }
         }
     }
