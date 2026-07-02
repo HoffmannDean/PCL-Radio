@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.luh.hci.pclab.ui.theme.AppTheme
-import de.luh.hci.pclab.radio.data.DeviceViewModel
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -45,7 +44,7 @@ fun CasinoView(
     val knobPos = remember { Animatable(sliderValue.toFloat()) }
     val scope = rememberCoroutineScope()
 
-    val canPlay = !spinning && counter > 0 && counter > lastPlayedCounter
+    val canPlay = !spinning && coinCount > 0 && coinCount > lastPlayedCounter
 
     Column(
         modifier = modifier
@@ -96,7 +95,7 @@ fun CasinoView(
             onClick = {
                 val pick = sliderValue
                 val target = options.indices.random()
-                lastPlayedCounter = counter
+                lastPlayedCounter = coinCount
                 result = null
                 spinning = true
                 scope.launch {
