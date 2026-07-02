@@ -43,10 +43,12 @@ fun RadioSlider(
     options: Array<String>,
     selected: Int,
     onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    animatedIndex: Float? = null,   // when set, knob follows this and input is locked
 ) {
     val tickSize = 10.dp
     val density = LocalDensity.current
+    val locked = animatedIndex != null
 
     Column(modifier = modifier.fillMaxWidth()) {
         BoxWithConstraints(
@@ -59,8 +61,8 @@ fun RadioSlider(
             val usable = totalWidth - padH * 2
             val step = usable / (options.size - 1)
 
-            // for calculating x position of index
-            fun xForIndex(i: Int) = padH + step * i
+            fun xForIndex(i: Float) = padH + step * i
+            fun xForIndex(i: Int) = xForIndex(i.toFloat())
 
             // Track
             Box(
@@ -88,42 +90,54 @@ fun RadioSlider(
                             else MaterialTheme.colorScheme.outline,
                             CircleShape
                         )
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) { onSelect(i) }
+                        .then(
+                            if (locked) Modifier
+                            else Modifier.clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) { onSelect(i) }
+                        )
                         .visible(!isSelected)
                 )
             }
 
-            val highlightLeft = if (selected == 0) 0.dp
-            else (xForIndex(selected) + xForIndex(selected - 1)) / 2
+            // highlight only when not animating (based on discrete selection)
+            if (!locked) {
+                val highlightLeft = if (selected == 0) 0.dp
+                else (xForIndex(selected) + xForIndex(selected - 1)) / 2
+                val highlightRight = if (selected == options.lastIndex) totalWidth
+                else (xForIndex(selected) + xForIndex(selected + 1)) / 2
 
-            val highlightRight = if (selected == options.lastIndex) totalWidth
-            else (xForIndex(selected) + xForIndex(selected + 1)) / 2
+                Box(
+                    modifier = Modifier
+                        .offset(x = highlightLeft)
+                        .width(highlightRight - highlightLeft)
+                        .height(6.dp)
+                        .align(Alignment.CenterStart)
+                        .background(
+                            MaterialTheme.colorScheme.inverseOnSurface,
+                            RoundedCornerShape(2.dp)
+                        )
+                )
+            }
 
-            Box(
-                modifier = Modifier
-                    .offset(x = highlightLeft)
-                    .width(highlightRight - highlightLeft)
-                    .height(6.dp)
-                    .align(Alignment.CenterStart)
-                    .background(
-                        MaterialTheme.colorScheme.inverseOnSurface,
-                        RoundedCornerShape(2.dp)
-                    )
+            val knobX = if (animatedIndex != null) xForIndex(animatedIndex)
+            else xForIndex(selected)
+
+            SliderKnob(
+                xPos = knobX,
+                enabled = !locked,
+                onSelect = { currentX ->
+                    val newIndex = options.indices.minByOrNull { i ->
+                        val tx = with(density) { xForIndex(i).toPx() }
+                        abs(currentX - tx)
+                    } ?: selected
+                    onSelect(newIndex)
+                }
             )
-
-            SliderKnob(xPos = xForIndex(selected), onSelect = { currentX ->
-                val newIndex = options.indices.minByOrNull { i ->
-                    val tx = with(density) { xForIndex(i).toPx() }
-                    abs(currentX - tx)
-                } ?: selected
-                onSelect(newIndex)
-            })
         }
 
-        // Labels
+        // Labels (unchanged)
         Row(modifier = Modifier.fillMaxWidth()) {
             options.forEachIndexed { i, label ->
                 Text(
@@ -149,6 +163,7 @@ fun BoxWithConstraintsScope.SliderKnob(
     width: Dp = 30.dp,
     height: Dp = 44.dp,
     color: Color = errorLight,
+    enabled: Boolean = true,
     onSelect: (Float) -> Unit,
 ) {
     var dragX by remember { mutableFloatStateOf(0f) }
@@ -159,29 +174,26 @@ fun BoxWithConstraintsScope.SliderKnob(
             .offset(x = xPos - width / 2)
             .size(width, height)
             .align(Alignment.CenterStart)
-            .draggable(
-                orientation = Orientation.Horizontal,
-                state = rememberDraggableState { delta ->
-                    dragX += delta
-                },
-                onDragStarted = { dragX = 0f },
-                onDragStopped = {
-                    // select closest index
-                    val currentX = with(density) { xPos.toPx() } + dragX
-                    onSelect(currentX)
-                    dragX = 0f
-                }
+            .then(
+                if (!enabled) Modifier
+                else Modifier.draggable(
+                    orientation = Orientation.Horizontal,
+                    state = rememberDraggableState { delta -> dragX += delta },
+                    onDragStarted = { dragX = 0f },
+                    onDragStopped = {
+                        val currentX = with(density) { xPos.toPx() } + dragX
+                        onSelect(currentX)
+                        dragX = 0f
+                    }
+                )
             ),
         contentAlignment = Alignment.Center
     ) {
-        Row {
-            Box(
-                modifier = Modifier
-                    .width(6.dp)
-                    .height(height)
-                    .alpha(1f)
-                    .background(color)
-            )
-        }
+        Box(
+            modifier = Modifier
+                .width(6.dp)
+                .height(height)
+                .background(color)
+        )
     }
 }
