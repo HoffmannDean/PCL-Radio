@@ -23,6 +23,7 @@ import de.luh.hci.pclab.radio.ui.DeviceViewModel
 import kotlinx.serialization.Serializable
 import androidx.navigation.toRoute
 import de.luh.hci.pclab.apps.music.ui.AlbumDetailView
+import de.luh.hci.pclab.apps.music.ui.AlbumDetailViewModel
 import de.luh.hci.pclab.apps.music.ui.AlbumsView
 import de.luh.hci.pclab.apps.music.ui.PlayerViewModel
 import kotlinx.serialization.json.Json
@@ -48,7 +49,7 @@ object CasinoApp
 @Composable
 fun Navigation(
     deviceViewModel: DeviceViewModel = viewModel(factory = DeviceViewModel.Factory),
-    playerViewModel: PlayerViewModel = viewModel(factory = PlayerViewModel.Factory)
+    //playerViewModel: PlayerViewModel = viewModel(factory = PlayerViewModel.Factory)
 ) {
     val navController = rememberNavController()
     val connectedDevice by deviceViewModel.device.collectAsStateWithLifecycle()
@@ -128,7 +129,7 @@ fun Navigation(
             composable<AlbumDetail> { backStackEntry ->
                 val route = backStackEntry.toRoute<AlbumDetail>()
                 val album = Json.decodeFromString<Album>(route.albumJson)
-                AlbumDetailView(album = album, playerViewModel = playerViewModel)
+                AlbumDetailView(album = album)
             }
         }
     }
