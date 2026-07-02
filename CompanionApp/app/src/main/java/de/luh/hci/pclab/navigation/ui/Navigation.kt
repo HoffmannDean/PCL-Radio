@@ -86,6 +86,7 @@ fun Navigation(
     val connectedDevice by deviceViewModel.device.collectAsStateWithLifecycle()
     val connectionState by deviceViewModel.connectionState.collectAsStateWithLifecycle()
     val availableDevices by deviceViewModel.availableDevices.collectAsStateWithLifecycle()
+    val counter by deviceViewModel.counter.collectAsStateWithLifecycle()
 
     val requestScan = rememberBluetoothPermission {
         deviceViewModel.searchAvailableDevices()
@@ -143,6 +144,7 @@ fun Navigation(
 
             composable<AppSelection> {
                 SelectionView(
+                    coinCount = counter,
                     onAppSelected = { app ->
                         when (app.id) {
                             "casino" -> navController.navigate(CasinoApp)
@@ -153,9 +155,8 @@ fun Navigation(
             }
 
             composable<CasinoApp> {
-                val counter by deviceViewModel.counter.collectAsStateWithLifecycle()
                 CasinoView(
-                    counter = counter,
+                    coinCount = counter,
                     onSubmit = {
                     println("Submitted: $it")
                 })

@@ -31,7 +31,7 @@ class DeviceViewModel(
     val counter: StateFlow<Int> = _counter.asStateFlow()
 
     init {
-        searchAvailableDevices()
+        // searchAvailableDevices() // Removed to prevent SecurityException before permissions are granted
     }
 
     fun searchAvailableDevices() {

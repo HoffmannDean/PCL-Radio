@@ -35,6 +35,7 @@ import de.luh.hci.pclab.apps.selection.model.Apps
 
 @Composable
 fun SelectionView(
+    coinCount: Int,
     onAppSelected: (AppInfo) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -55,7 +56,7 @@ fun SelectionView(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            item { CoinCounterCard(1) }
+            item { CoinCounterCard(coinCount) }
             items(Apps.all) { app ->
                 AppCard(app = app, onClick = { onAppSelected(app) })
             }
@@ -66,5 +67,5 @@ fun SelectionView(
 @Preview(showBackground = true)
 @Composable
 fun SelectionViewPreview() {
-    SelectionView(onAppSelected = {})
+    SelectionView(1, onAppSelected = {})
 }
