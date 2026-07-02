@@ -23,9 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.luh.hci.pclab.ui.theme.AppTheme
+import de.luh.hci.pclab.radio.data.DeviceViewModel
 
 @Composable
 fun CasinoView(
+    counter: Int,
     modifier: Modifier = Modifier,
     onSubmit: (Int) -> Unit
 ) {
@@ -46,6 +48,7 @@ fun CasinoView(
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            Text("Current Jackpot: $counter")
             Text(
                 text = "Choose a target range:",
                 style = MaterialTheme.typography.headlineSmall,
@@ -80,8 +83,10 @@ fun CasinoViewPreview() {
     AppTheme(
         dynamicColor = false,
     ) {
-        CasinoView(onSubmit = {
-            println("Submitted: $it")
-        })
+        CasinoView(
+            counter = 123,
+            onSubmit = {
+                println("Submitted: $it")
+            })
     }
 }

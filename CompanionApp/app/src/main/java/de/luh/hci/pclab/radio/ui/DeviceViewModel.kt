@@ -27,6 +27,9 @@ class DeviceViewModel(
     val availableDevices: StateFlow<List<DeviceInfo>> = esp32repo.availableDevices
     val connectionState = esp32repo.connectionState
 
+    private val _counter = MutableStateFlow(0)
+    val counter: StateFlow<Int> = _counter.asStateFlow()
+
     init {
         searchAvailableDevices()
     }
@@ -40,6 +43,19 @@ class DeviceViewModel(
             val result = esp32repo.connect(deviceInfo)
             if (result == ConnectionState.CONNECTED) {
                 _connectedDevice.value = Device(deviceInfo)
+                listenForData()
+            }
+        }
+    }
+
+    private fun listenForData() {
+        viewModelScope.launch {
+            esp32repo.incomingLines().collect { line ->
+                if (line.startsWith("COUNT:")) {
+                    line.removePrefix("COUNT:").trim().toIntOrNull()?.let {
+                        _counter.value = it
+                    }
+                }
             }
         }
     }

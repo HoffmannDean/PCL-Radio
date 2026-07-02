@@ -9,7 +9,7 @@ import de.luh.hci.pclab.radio.data.Esp32Repository
 class RadioApp : Application() {
 
     val esp32Repo: Esp32Repository by lazy {
-        Esp32Repository()
+        Esp32Repository(this)
     }
 
     val dbRepo: DatabaseRepository by lazy {

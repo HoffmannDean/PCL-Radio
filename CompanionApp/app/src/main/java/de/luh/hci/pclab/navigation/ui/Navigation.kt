@@ -26,6 +26,14 @@ import de.luh.hci.pclab.apps.music.ui.AlbumDetailView
 import de.luh.hci.pclab.apps.music.ui.AlbumsView
 import de.luh.hci.pclab.apps.music.ui.PlayerViewModel
 import kotlinx.serialization.json.Json
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 
 @Serializable
 object Connectivity
@@ -45,6 +53,30 @@ data class AlbumDetail(
 @Serializable
 object CasinoApp
 
+@RequiresApi(Build.VERSION_CODES.S)
+private val btPermissions = arrayOf(
+    Manifest.permission.BLUETOOTH_CONNECT,
+    Manifest.permission.BLUETOOTH_SCAN
+)
+
+@RequiresApi(Build.VERSION_CODES.S)
+@Composable
+fun rememberBluetoothPermission(onGranted: () -> Unit): () -> Unit {
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        if (grants.values.all { it }) onGranted()
+    }
+    return {
+        val allGranted = btPermissions.all {
+            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        }
+        if (allGranted) onGranted() else launcher.launch(btPermissions)
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun Navigation(
     deviceViewModel: DeviceViewModel = viewModel(factory = DeviceViewModel.Factory),
@@ -54,6 +86,14 @@ fun Navigation(
     val connectedDevice by deviceViewModel.device.collectAsStateWithLifecycle()
     val connectionState by deviceViewModel.connectionState.collectAsStateWithLifecycle()
     val availableDevices by deviceViewModel.availableDevices.collectAsStateWithLifecycle()
+
+    val requestScan = rememberBluetoothPermission {
+        deviceViewModel.searchAvailableDevices()
+    }
+
+    LaunchedEffect(Unit) {
+        requestScan()
+    }
 
     LaunchedEffect(connectionState) {
         when (connectionState) {
@@ -113,7 +153,10 @@ fun Navigation(
             }
 
             composable<CasinoApp> {
-                CasinoView(onSubmit = {
+                val counter by deviceViewModel.counter.collectAsStateWithLifecycle()
+                CasinoView(
+                    counter = counter,
+                    onSubmit = {
                     println("Submitted: $it")
                 })
             }
