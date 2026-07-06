@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import de.luh.hci.pclab.apps.music.model.Song
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -24,6 +25,9 @@ interface SongDao {
     @Query("SELECT * FROM songs WHERE albumId = :albumId ORDER BY title ASC")
     fun getSongsForAlbum(albumId: Long): Flow<List<SongEntity>>
 
+    @Query("SELECT * FROM songs WHERE id = :id")
+    suspend fun getSongById(id: Long): SongEntity?
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(song: SongEntity)
 
@@ -32,4 +36,5 @@ interface SongDao {
 
     @Query("SELECT mediaStoreId FROM songs WHERE albumId = :albumId")
     suspend fun getMediaStoreIdsForAlbum(albumId: Long): List<Long>
+
 }

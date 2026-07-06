@@ -4,11 +4,14 @@ import android.content.Context
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.room.Dao
 import de.luh.hci.pclab.apps.music.model.Song
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import de.luh.hci.pclab.apps.music.data.SongDao
+import de.luh.hci.pclab.apps.music.model.toDomain
 
-class MusicPlayerRepository(context: Context) {
+class MusicPlayerRepository(context: Context, private val songDao: SongDao) {
 
     private val player = ExoPlayer.Builder(context).build()
 
@@ -33,6 +36,10 @@ class MusicPlayerRepository(context: Context) {
         player.play()
     }
 
+    suspend fun getSongById(id: Long): Song? {
+        return songDao.getSongById(id)?.toDomain()
+    }
+
     fun togglePause() {
         if (player.isPlaying) player.pause() else player.play()
     }
@@ -44,5 +51,19 @@ class MusicPlayerRepository(context: Context) {
 
     fun release() {
         player.release()
+    }
+
+    fun currentPosition(): Long = player.currentPosition
+
+    fun pause() {
+        player.pause()
+    }
+
+    fun previous() {
+        player.seekToPreviousMediaItem()
+    }
+
+    fun next() {
+        player.seekToNextMediaItem()
     }
 }
