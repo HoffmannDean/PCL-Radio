@@ -91,4 +91,8 @@ class DatabaseRepository(
         }
         songs
     }
+
+    fun getAllSongs(): Flow<List<Song>> {
+        return songDao.getAllSongs().map { list -> list.map { it.toDomain() } }
+    }
 }

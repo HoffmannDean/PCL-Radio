@@ -1,5 +1,7 @@
 package de.luh.hci.pclab.apps.music.ui
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,7 +14,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Album
@@ -42,12 +46,13 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import kotlin.Unit
 
-// Shows multiple albums and allows updates, add, delete...
+//Shows all albums and allows search of title. Click on album opens list of songs of this album.
+//TODO: Artist adden
 @Composable
-
 fun AlbumsContent(
     albums: List<Album>,
     onAlbumClick: (Album) -> Unit,
@@ -62,27 +67,35 @@ fun AlbumsContent(
     }
 
     val darkBg = MaterialTheme.colorScheme.surfaceContainerHighest
+    val listState = rememberLazyListState()
 
     Scaffold(
         bottomBar = {
-            Row(
+
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(darkBg)
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                IconButton(onClick = onHomeClick) {
-                    Icon(Icons.Filled.Home, contentDescription = "Home")
-                }
-                IconButton(onClick = onAlbumsClick) {
-                    Icon(Icons.Filled.LibraryMusic, contentDescription = "Albums")
-                }
-                IconButton(onClick = onSongsClick) {
-                    Icon(Icons.Filled.MusicNote, contentDescription = "Songs")
-                }
-                IconButton(onClick = onPlayClick) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = "Play")
+                HorizontalDivider(color = MaterialTheme.colorScheme.primary, thickness = 1.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    IconButton(onClick = onHomeClick) {
+                        Icon(Icons.Filled.Home, contentDescription = "Home")
+                    }
+                    IconButton(onClick = onAlbumsClick) {
+                        Icon(Icons.Filled.LibraryMusic, contentDescription = "Albums")
+                    }
+                    IconButton(onClick = onSongsClick) {
+                        Icon(Icons.Filled.MusicNote, contentDescription = "Songs")
+                    }
+                    IconButton(onClick = onPlayClick) {
+                        Icon(Icons.Filled.PlayArrow, contentDescription = "Play")
+                    }
                 }
             }
         }
@@ -92,7 +105,7 @@ fun AlbumsContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(darkBg)
-                    .padding(top = 25.dp),
+                    .padding(top = 60.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -109,10 +122,15 @@ fun AlbumsContent(
                     singleLine = true
                 )
             }
+            HorizontalDivider(color = MaterialTheme.colorScheme.primary, thickness = 1.dp)
 
             LazyColumn(
+                state = listState,
                 contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.simpleVerticalScrollbar(listState)
+                    .weight(1f)
+                    .simpleVerticalScrollbar(listState)
             ) {
                 items(filteredAlbums, key = { it.id }) { album ->
                     AlbumRow(album = album, onClick = { onAlbumClick(album) })
@@ -223,6 +241,7 @@ private fun AlbumCover(modifier: Modifier = Modifier) {
         )
     }
 }*/
+
 
 @Preview(showBackground = true)
 @Composable

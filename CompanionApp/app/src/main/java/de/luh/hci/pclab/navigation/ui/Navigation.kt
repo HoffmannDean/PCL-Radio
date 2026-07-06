@@ -1,5 +1,7 @@
 package de.luh.hci.pclab.navigation.ui
 
+import android.net.Uri
+import androidx.compose.animation.EnterTransition.Companion.None
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -7,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -22,8 +25,12 @@ import de.luh.hci.pclab.radio.data.ConnectionState
 import de.luh.hci.pclab.radio.ui.DeviceViewModel
 import kotlinx.serialization.Serializable
 import androidx.navigation.toRoute
+import de.luh.hci.pclab.RadioApp
+import de.luh.hci.pclab.apps.music.model.Song
+import kotlinx.serialization.encodeToString
 import de.luh.hci.pclab.apps.music.ui.SongsView
 import de.luh.hci.pclab.apps.music.ui.AlbumsView
+import de.luh.hci.pclab.apps.music.ui.PlayView
 import kotlinx.serialization.json.Json
 
 @Serializable
@@ -37,10 +44,11 @@ object MusicApp
 
 
 @Serializable
-data class Songs(
-    val albumJson: String,
-)
-
+data class Songs(val albumJson: String? = null)
+@Serializable
+data class Play(
+    val songId: Long? = null,
+    )
 @Serializable
 object CasinoApp
 
@@ -53,6 +61,7 @@ fun Navigation(
     val connectedDevice by deviceViewModel.device.collectAsStateWithLifecycle()
     val connectionState by deviceViewModel.connectionState.collectAsStateWithLifecycle()
     val availableDevices by deviceViewModel.availableDevices.collectAsStateWithLifecycle()
+    val app = LocalContext.current.applicationContext as RadioApp
 
     LaunchedEffect(connectionState) {
         when (connectionState) {
@@ -84,11 +93,11 @@ fun Navigation(
                 connectedDevice = connectedDevice,
             )
         }
-    ) { innerPadding ->
+    ) { _ ->
         NavHost(
             navController = navController,
             startDestination = Connectivity,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.fillMaxSize()
         ) {
             composable<Connectivity> {
                 ConnectivityView(
@@ -119,29 +128,45 @@ fun Navigation(
 
             composable<MusicApp> {
                 AlbumsView(
-                    onAlbumClick = { album ->
-                    val albumJson = Json.encodeToString(album)
-                    navController.navigate(Songs(albumJson))},
-                    onHomeClick = {},
-                    onAlbumsClick = {},
-                    onSongsClick = {},
-                    onPlayClick = {}
-                    )
+                    onAlbumClick = { album: Album ->
+                        navController.navigate(Songs(Json.encodeToString(album)))
+                    },
+                    onHomeClick = { navController.navigate(AppSelection) },
+                    onAlbumsClick = { },
+                    onSongsClick = { navController.navigate(Songs(null)) },
+                    onPlayClick = {
+                        val id = app.playerRepo.currentSong.value?.id
+                        navController.navigate(Play(id))
+                    })
                 }
 
 
             composable<Songs> { backStackEntry ->
                 val route = backStackEntry.toRoute<Songs>()
-                val album = Json.decodeFromString<Album>(route.albumJson)
+                val album = route.albumJson?.let { Json.decodeFromString<Album>(it) }
                 SongsView(
                     album = album,
-                    onSongClick = {},
-                    onHomeClick = {},
-                    onAlbumsClick = {},
+                    onSongClick = { song -> navController.navigate(Play(song.id)) },
+                    onHomeClick = { navController.navigate(AppSelection) },
+                    onAlbumsClick = { navController.navigate(MusicApp) },
                     onSongsClick = {},
+                    onPlayClick = {
+                        val id = app.playerRepo.currentSong.value?.id
+                        navController.navigate(Play(id))
+                    }
+                )
+            }
+            composable<Play> { backStackEntry ->
+                val route = backStackEntry.toRoute<Play>()
+                PlayView(
+                    songId = route.songId,
+                    onHomeClick = { navController.navigate(AppSelection) },
+                    onAlbumsClick = { navController.navigate(MusicApp) },
+                    onSongsClick = { navController.navigate(Songs(null)) },
                     onPlayClick = {}
                 )
             }
+
         }
     }
 }
