@@ -25,11 +25,11 @@ class AlbumsViewModel(
 
     }
 
-    fun createAlbum(name: String) {
+    /*fun createAlbum(name: String) {
        viewModelScope.launch {
            musicRepo.createAlbum(name)
        }
-    }
+    }*/
 
     fun deleteAlbum(album: AlbumEntity) {
         viewModelScope.launch {

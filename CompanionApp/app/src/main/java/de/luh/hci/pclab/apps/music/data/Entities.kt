@@ -9,7 +9,10 @@ import androidx.room.PrimaryKey
 data class AlbumEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
-    val createdAt: Long = System.currentTimeMillis()
+    val artistAl: String = "",
+    var durationMs: Long = 0,
+    val createdAt: Long = System.currentTimeMillis(),
+    var songCount: Int = 0
 )
 
 @Entity(
@@ -33,5 +36,6 @@ data class SongEntity(
     val durationMs: Long,
     val sizeBytes: Long,
     val mimeType: String,
-    val dateAdded: Long           // epoch seconds from MediaStore
+    val dateAdded: Long,           // epoch seconds from MediaStore
+    val selected: Boolean = false         //if selected for a new Album
 )

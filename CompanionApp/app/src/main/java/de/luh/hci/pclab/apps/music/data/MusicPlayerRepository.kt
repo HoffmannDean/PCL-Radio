@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import de.luh.hci.pclab.apps.music.data.SongDao
 import de.luh.hci.pclab.apps.music.model.toDomain
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 class MusicPlayerRepository(context: Context, private val songDao: SongDao) {
 
@@ -30,12 +31,12 @@ class MusicPlayerRepository(context: Context, private val songDao: SongDao) {
         })
     }
 
-    fun play(song: Song) {
+    /*fun play(song: Song) {
         _currentSong.value = song
         player.setMediaItem(MediaItem.fromUri(song.uri))
         player.prepare()
         player.play()
-    }
+    }*/
 
     suspend fun getSongById(id: Long): Song? {
         return songDao.getSongById(id)?.toDomain()
@@ -56,15 +57,48 @@ class MusicPlayerRepository(context: Context, private val songDao: SongDao) {
 
     fun currentPosition(): Long = player.currentPosition
 
-    fun pause() {
-        player.pause()
+
+    private var currentPlaylist: List<Song> = emptyList()
+    private var currentIndex: Int = 0
+
+
+    suspend fun play(song: Song, playlistFlow: Flow<List<Song>>? = null) {
+        if (playlistFlow != null) {
+            currentPlaylist = playlistFlow.first()
+        } 
+        
+        if (currentPlaylist.isEmpty() || currentPlaylist.none { it.mediaStoreId == song.mediaStoreId }) {
+            currentPlaylist = listOf(song)
+        }
+        
+        currentIndex = currentPlaylist.indexOfFirst { it.mediaStoreId == song.mediaStoreId }.coerceAtLeast(0)
+        _currentSong.value = song
+        player.setMediaItem(MediaItem.fromUri(song.uri))
+        player.prepare()
+        player.play()
     }
 
-    fun previous() {
-        player.seekToPreviousMediaItem()
+    fun seekTo(positionMs: Long) {
+        player.seekTo(positionMs)
     }
 
     fun next() {
-        player.seekToNextMediaItem()
+        if (currentPlaylist.isEmpty()) return
+        currentIndex = (currentIndex + 1) % currentPlaylist.size
+        val song = currentPlaylist[currentIndex]
+        _currentSong.value = song
+        player.setMediaItem(MediaItem.fromUri(song.uri))
+        player.prepare()
+        player.play()
+    }
+
+    fun previous() {
+        if (currentPlaylist.isEmpty()) return
+        currentIndex = if (currentIndex - 1 < 0) currentPlaylist.size - 1 else currentIndex - 1
+        val song = currentPlaylist[currentIndex]
+        _currentSong.value = song
+        player.setMediaItem(MediaItem.fromUri(song.uri))
+        player.prepare()
+        player.play()
     }
 }

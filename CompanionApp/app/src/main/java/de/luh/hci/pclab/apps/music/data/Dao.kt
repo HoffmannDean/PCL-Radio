@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -12,11 +13,16 @@ interface AlbumDao {
     @Query("SELECT * FROM albums ORDER BY createdAt DESC")
     fun getAllAlbums(): Flow<List<AlbumEntity>>
 
+    @Query("SELECT * FROM albums WHERE id = :id")
+    suspend fun getAlbumById(id: Long): AlbumEntity?
     @Insert
     suspend fun insert(album: AlbumEntity): Long
 
     @Delete
     suspend fun delete(album: AlbumEntity)
+
+    @Update
+    suspend fun update(album: AlbumEntity)
 }
 
 @Dao

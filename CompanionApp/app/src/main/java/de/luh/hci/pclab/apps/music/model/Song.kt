@@ -15,7 +15,8 @@ data class Song(
     val durationMs: Long,
     val sizeBytes: Long,
     val mimeType: String,
-    val dateAdded: Long
+    val dateAdded: Long,
+    val selected: Boolean = false
 ) {
     val durationFormatted: String
         get() {
@@ -39,7 +40,8 @@ fun SongEntity.toDomain() = Song(
     durationMs = durationMs,
     sizeBytes = sizeBytes,
     mimeType = mimeType,
-    dateAdded = dateAdded
+    dateAdded = dateAdded,
+    selected = selected
 )
 
 fun Song.toEntity() = SongEntity(
@@ -49,11 +51,12 @@ fun Song.toEntity() = SongEntity(
     uri = uri.toString(),
     title = title,
     artist = artist,
-    album = album,
+    album = album, //Todo: was ist mit mehreren Alben?
     durationMs = durationMs,
     sizeBytes = sizeBytes,
     mimeType = mimeType,
-    dateAdded = dateAdded
+    dateAdded = dateAdded,
+    selected = selected
 )
 
 

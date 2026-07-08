@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -57,7 +58,7 @@ fun AlbumsContent(
     albums: List<Album>,
     onAlbumClick: (Album) -> Unit,
     onHomeClick: () -> Unit,
-    onAlbumsClick: () -> Unit,
+    onCreateClick: () -> Unit,
     onSongsClick: () -> Unit,
     onPlayClick: () -> Unit
 ) {
@@ -87,13 +88,13 @@ fun AlbumsContent(
                     IconButton(onClick = onHomeClick) {
                         Icon(Icons.Filled.Home, contentDescription = "Home")
                     }
-                    IconButton(onClick = onAlbumsClick) {
-                        Icon(Icons.Filled.LibraryMusic, contentDescription = "Albums")
+                    IconButton(onClick = onCreateClick) {
+                        Icon(Icons.Filled.AddBox, contentDescription = "Create")
                     }
                     IconButton(onClick = onSongsClick) {
                         Icon(Icons.Filled.MusicNote, contentDescription = "Songs")
                     }
-                    IconButton(onClick = onPlayClick) {
+                    IconButton(onClick = onPlayClick) { //TODO: ggf ändern zum Pausenzeichen, wenn Musik läut
                         Icon(Icons.Filled.PlayArrow, contentDescription = "Play")
                     }
                 }
@@ -143,7 +144,7 @@ fun AlbumsContent(
 fun AlbumsView(
     onAlbumClick: (Album) -> Unit,
     onHomeClick: () -> Unit,
-    onAlbumsClick: () -> Unit,
+    onCreateClick: () -> Unit,
     onSongsClick: () -> Unit,
     onPlayClick: () -> Unit,
     viewModel: AlbumsViewModel = viewModel(factory = AlbumsViewModel.Factory)
@@ -153,7 +154,7 @@ fun AlbumsView(
         albums = albums,
         onAlbumClick = onAlbumClick,
         onHomeClick = onHomeClick,
-        onAlbumsClick = onAlbumsClick,
+        onCreateClick = onCreateClick,
         onSongsClick = onSongsClick,
         onPlayClick = onPlayClick
     )
@@ -199,7 +200,7 @@ private fun AlbumRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "artist", //album.artist,
+                    text = album.artistAl,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -208,14 +209,11 @@ private fun AlbumRow(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                /*val minutes = song.durationMs / 60000
-                val seconds = (song.durationMs % 60000) / 1000
+                val minutes = album.durationMs / 60000
+                val seconds = (album.durationMs % 60000) / 1000
 
                 Text(
-                    text = "${song.album} - %02d:%02d".format(minutes, seconds),*/
-
-                Text(
-                    text = "${album.songCount} Songs - 00:00 Min", //${album.fullTime}",
+                    text = "${album.songCount} Songs - %02d:%02d Min".format(minutes, seconds),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -247,10 +245,10 @@ private fun AlbumCover(modifier: Modifier = Modifier) {
 @Composable
 fun AlbumsContentPreview() {
     AlbumsContent(
-        albums = listOf(Album(id = 1, name = "Sample 1"), Album(id = 2, name = "Sample 2"), Album(id = 3, name = "Sample 3"), Album(id = 4, name = "Sample 4")),
+        albums = listOf(Album(id = 1, name = "Sample 1", durationMs = 3400), Album(id = 2, name = "Sample 2", durationMs = 3400), Album(id = 3, name = "Sample 3", durationMs = 3400), Album(id = 4, name = "Sample 4", durationMs = 3400)),
         onAlbumClick = {},
         onHomeClick = {},
-        onAlbumsClick = {},
+        onCreateClick = {},
         onSongsClick = {},
         onPlayClick = {}
     )

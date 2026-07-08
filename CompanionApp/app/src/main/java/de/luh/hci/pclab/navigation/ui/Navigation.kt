@@ -30,6 +30,7 @@ import de.luh.hci.pclab.apps.music.model.Song
 import kotlinx.serialization.encodeToString
 import de.luh.hci.pclab.apps.music.ui.SongsView
 import de.luh.hci.pclab.apps.music.ui.AlbumsView
+import de.luh.hci.pclab.apps.music.ui.CreateView
 import de.luh.hci.pclab.apps.music.ui.PlayView
 import kotlinx.serialization.json.Json
 
@@ -42,12 +43,14 @@ object AppSelection
 @Serializable
 object MusicApp
 
+@Serializable
+object CreateAlbum
 
 @Serializable
 data class Songs(val albumJson: String? = null)
 @Serializable
 data class Play(
-    val songId: Long? = null,
+    val songId: Long? = null
     )
 @Serializable
 object CasinoApp
@@ -126,13 +129,24 @@ fun Navigation(
                 })
             }
 
+            composable<CreateAlbum> {
+                CreateView(
+                    onHomeClick = { navController.navigate(AppSelection) },
+                    onAlbumsClick = { navController.navigate(MusicApp) },
+                    onSongsClick = { navController.navigate(Songs(null)) },
+                    onPlayClick = {
+                        val id = app.playerRepo.currentSong.value?.id
+                        navController.navigate(Play(id))
+                    })
+            }
+
             composable<MusicApp> {
                 AlbumsView(
                     onAlbumClick = { album: Album ->
                         navController.navigate(Songs(Json.encodeToString(album)))
                     },
                     onHomeClick = { navController.navigate(AppSelection) },
-                    onAlbumsClick = { },
+                    onCreateClick = { navController.navigate(CreateAlbum) },
                     onSongsClick = { navController.navigate(Songs(null)) },
                     onPlayClick = {
                         val id = app.playerRepo.currentSong.value?.id
@@ -148,8 +162,8 @@ fun Navigation(
                     album = album,
                     onSongClick = { song -> navController.navigate(Play(song.id)) },
                     onHomeClick = { navController.navigate(AppSelection) },
+                    onCreateClick = { navController.navigate(CreateAlbum) },
                     onAlbumsClick = { navController.navigate(MusicApp) },
-                    onSongsClick = {},
                     onPlayClick = {
                         val id = app.playerRepo.currentSong.value?.id
                         navController.navigate(Play(id))
@@ -161,9 +175,9 @@ fun Navigation(
                 PlayView(
                     songId = route.songId,
                     onHomeClick = { navController.navigate(AppSelection) },
+                    onCreateClick = { navController.navigate(CreateAlbum) },
                     onAlbumsClick = { navController.navigate(MusicApp) },
                     onSongsClick = { navController.navigate(Songs(null)) },
-                    onPlayClick = {}
                 )
             }
 
