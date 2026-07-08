@@ -13,6 +13,13 @@ val provider = GoogleFont.Provider(
     certificates = R.array.com_google_android_gms_fonts_certs
 )
 
+val casinoFontFamily = FontFamily(
+    Font(
+        googleFont = GoogleFont("Bungee Spice"),
+        fontProvider = provider,
+    )
+)
+
 val bodyFontFamily = FontFamily(
     Font(
         googleFont = GoogleFont("Familjen Grotesk"),
