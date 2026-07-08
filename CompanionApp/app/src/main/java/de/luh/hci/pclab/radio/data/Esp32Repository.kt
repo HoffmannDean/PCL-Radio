@@ -19,15 +19,26 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
 
+import kotlinx.coroutines.flow.StateFlow
+
 enum class ConnectionState {
     DISCONNECTED,
     CONNECTING,
     CONNECTED
 }
 
+interface Esp32Repository {
+    val connectionState: StateFlow<ConnectionState>
+    val availableDevices: StateFlow<List<DeviceInfo>>
+    fun startScan()
+    suspend fun connect(device: DeviceInfo): ConnectionState
+    suspend fun disconnect()
+    fun incomingLines(): Flow<String>
+}
+
 // also includes bluetooth functionalities
 @SuppressLint("MissingPermission")
-class Esp32Repository(context: Context) {
+class BluetoothEsp32Repository(context: Context) : Esp32Repository {
     private val sppUuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
     private val adapter: BluetoothAdapter? =
@@ -35,17 +46,17 @@ class Esp32Repository(context: Context) {
 
     private var socket: BluetoothSocket? = null
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
-    val connectionState = _connectionState.asStateFlow()
+    override val connectionState = _connectionState.asStateFlow()
 
     private val _availableDevices = MutableStateFlow<List<DeviceInfo>>(emptyList())
-    val availableDevices = _availableDevices.asStateFlow()
+    override val availableDevices = _availableDevices.asStateFlow()
 
-    fun startScan() {
+    override fun startScan() {
         val bonded = adapter?.bondedDevices.orEmpty()
         _availableDevices.value = bonded.map { DeviceInfo(it.name ?: "Unknown", it.address) }
     }
 
-    suspend fun connect(device: DeviceInfo): ConnectionState {
+    override suspend fun connect(device: DeviceInfo): ConnectionState {
         _connectionState.value = ConnectionState.CONNECTING
         val success = withContext(Dispatchers.IO) {
             try {
@@ -66,7 +77,7 @@ class Esp32Repository(context: Context) {
         return _connectionState.value
     }
 
-    suspend fun disconnect() {
+    override suspend fun disconnect() {
         withContext(Dispatchers.IO) {
             try { socket?.close() } catch (_: Exception) {}
             socket = null
@@ -75,7 +86,7 @@ class Esp32Repository(context: Context) {
     }
 
 
-    fun incomingLines(): Flow<String> = flow {
+    override fun incomingLines(): Flow<String> = flow {
         val reader = socket?.inputStream?.bufferedReader() ?: return@flow
         try {
             while (true) {
