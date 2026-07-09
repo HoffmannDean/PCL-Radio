@@ -16,7 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /*
- * Provides information on the selected device
+ * Provides information on the selected device.
+ * The coin count and connection state are driven by the ESP32 over BLE.
  */
 class DeviceViewModel(
     private val esp32repo: Esp32Repository
@@ -27,11 +28,22 @@ class DeviceViewModel(
     val availableDevices: StateFlow<List<DeviceInfo>> = esp32repo.availableDevices
     val connectionState = esp32repo.connectionState
 
-    private val _counter = MutableStateFlow(0)
-    val counter: StateFlow<Int> = _counter.asStateFlow()
+    // Jackpot, pushed from the ESP via CoinCount notifications.
+    val counter: StateFlow<Int> = esp32repo.coinCount
+
+    private var pendingDevice: DeviceInfo? = null
 
     init {
-        // searchAvailableDevices() // Removed to prevent SecurityException before permissions are granted
+        // Keep the "connected device" in sync with the BLE connection state.
+        viewModelScope.launch {
+            esp32repo.connectionState.collect { state ->
+                _connectedDevice.value = when (state) {
+                    ConnectionState.CONNECTED -> pendingDevice?.let { Device(it) }
+                    ConnectionState.DISCONNECTED -> null
+                    ConnectionState.CONNECTING -> _connectedDevice.value
+                }
+            }
+        }
     }
 
     fun searchAvailableDevices() {
@@ -39,34 +51,21 @@ class DeviceViewModel(
     }
 
     fun connect(deviceInfo: DeviceInfo) {
-        viewModelScope.launch {
-            val result = esp32repo.connect(deviceInfo)
-            if (result == ConnectionState.CONNECTED) {
-                _connectedDevice.value = Device(deviceInfo)
-                listenForData()
-            }
-        }
-    }
-
-    private fun listenForData() {
-        viewModelScope.launch {
-            esp32repo.incomingLines().collect { line ->
-                if (line.startsWith("COUNT:")) {
-                    line.removePrefix("COUNT:").trim().toIntOrNull()?.let {
-                        _counter.value = it
-                    }
-                }
-            }
-        }
+        pendingDevice = deviceInfo
+        esp32repo.connect(deviceInfo)
     }
 
     fun disconnect() {
-        // TODO: disconnect from device
-        viewModelScope.launch {
-            esp32repo.disconnect()
-            _connectedDevice.value = null
-        }
+        esp32repo.disconnect()
     }
+
+    /** Switch the amplifier to Bluetooth audio (A2DP) for the music app. */
+    fun selectMusicSource() = esp32repo.setSource(Esp32Repository.SOURCE_DAC)
+
+    fun setVolume(attenuation: Int) = esp32repo.setVolume(attenuation)
+
+    /** Pay out the whole jackpot on a casino win; the ESP resets the count. */
+    fun dispense(coins: Int) = esp32repo.dispense(coins)
 
     companion object {
         val Factory : ViewModelProvider.Factory = viewModelFactory {

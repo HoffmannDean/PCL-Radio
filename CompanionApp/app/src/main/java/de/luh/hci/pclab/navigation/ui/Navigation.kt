@@ -158,11 +158,22 @@ fun Navigation(
                 CasinoView(
                     coinCount = counter,
                     onSubmit = {
-                    println("Submitted: $it")
-                })
+                        println("Submitted: $it")
+                    },
+                    // On a win, pay out the whole jackpot. The ESP runs the
+                    // dispenser motor and notifies the count back down to 0,
+                    // which re-locks play until a new coin is inserted.
+                    onWin = { deviceViewModel.dispense(counter) }
+                )
             }
 
             composable<MusicApp> {
+                // Route the amplifier to Bluetooth audio (A2DP) so anything the
+                // phone plays comes out of the radio speakers.
+                LaunchedEffect(Unit) { deviceViewModel.selectMusicSource() }
+                // TODO(music frontend): gate playback on `counter > 0` ("insert a
+                // coin to play"). `counter` and `deviceViewModel.setVolume(...)`
+                // are available here to thread into the music UI.
                 AlbumsView(onAlbumClick = { album ->
                     val albumJson = Json.encodeToString(album)
                     navController.navigate(AlbumDetail(albumJson))
