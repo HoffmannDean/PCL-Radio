@@ -2,11 +2,13 @@ package de.luh.hci.pclab.apps.music.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import de.luh.hci.pclab.RadioApp
 import de.luh.hci.pclab.apps.music.data.MusicPlayerRepository
 import de.luh.hci.pclab.apps.music.model.Song
+import kotlinx.coroutines.launch
 
 
 class PlayerViewModel(private val repo: MusicPlayerRepository) : ViewModel() {
@@ -14,7 +16,13 @@ class PlayerViewModel(private val repo: MusicPlayerRepository) : ViewModel() {
     val currentSong = repo.currentSong
     val isPlaying = repo.isPlaying
 
-    fun play(song: Song) = repo.play(song)
+    fun play(song: Song) {
+        viewModelScope.launch {
+            repo.play(song)
+        }
+    }
+
+
     fun togglePause() = repo.togglePause()
     fun stop() = repo.stop()
 

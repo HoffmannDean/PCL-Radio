@@ -1,9 +1,6 @@
 package de.luh.hci.pclab.navigation.ui
 
-import android.net.Uri
-import androidx.compose.animation.EnterTransition.Companion.None
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -13,7 +10,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -22,23 +18,14 @@ import de.luh.hci.pclab.apps.selection.ui.SelectionView
 import de.luh.hci.pclab.connectivity.ui.ConnectivityStatusBar
 import de.luh.hci.pclab.connectivity.ui.ConnectivityView
 import de.luh.hci.pclab.apps.music.model.Album
-import de.luh.hci.pclab.apps.music.model.Album
 import de.luh.hci.pclab.radio.data.ConnectionState
-import de.luh.hci.pclab.radio.ui.DeviceViewModel
 import de.luh.hci.pclab.radio.ui.DeviceViewModel
 import kotlinx.serialization.Serializable
 import androidx.navigation.toRoute
-import de.luh.hci.pclab.RadioApp
-import de.luh.hci.pclab.apps.music.model.Song
-import kotlinx.serialization.encodeToString
 import de.luh.hci.pclab.apps.music.ui.SongsView
 import de.luh.hci.pclab.apps.music.ui.AlbumsView
 import de.luh.hci.pclab.apps.music.ui.CreateView
 import de.luh.hci.pclab.apps.music.ui.PlayView
-import kotlinx.serialization.json.Json
-import androidx.navigation.toRoute
-import de.luh.hci.pclab.apps.music.ui.AlbumDetailView
-import de.luh.hci.pclab.apps.music.ui.AlbumsView
 import de.luh.hci.pclab.apps.music.ui.PlayerViewModel
 import kotlinx.serialization.json.Json
 import android.Manifest
@@ -47,7 +34,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.layout.padding
 import androidx.core.content.ContextCompat
 
 @Serializable
@@ -65,16 +52,6 @@ data class AlbumDetail(
     val albumJson: String,
 )
 
-@Serializable
-object CreateAlbum
-@Serializable
-data class EditAlbum(val albumJson: String)
-@Serializable
-data class Songs(val albumJson: String? = null)
-@Serializable
-data class Play(
-    val songId: Long? = null
-    )
 @Serializable
 object CreateAlbum
 @Serializable
@@ -115,7 +92,7 @@ fun rememberBluetoothPermission(onGranted: () -> Unit): () -> Unit {
 @Composable
 fun Navigation(
     deviceViewModel: DeviceViewModel = viewModel(factory = DeviceViewModel.Factory),
-    //playerViewModel: PlayerViewModel = viewModel(factory = PlayerViewModel.Factory)
+    playerViewModel: PlayerViewModel = viewModel(factory = PlayerViewModel.Factory)
 ) {
     val navController = rememberNavController()
     val connectedDevice by deviceViewModel.device.collectAsStateWithLifecycle()
@@ -133,13 +110,6 @@ fun Navigation(
 
     LaunchedEffect(connectionState) {
         when (connectionState) {
-            ConnectionState.CONNECTED -> {
-                // Only move to Selection if we are currently on the Connectivity screen
-                if (navController.currentDestination?.hasRoute<Connectivity>() == true) {
-                    navController.navigate(AppSelection) {
-                        popUpTo(navController.graph.id) { inclusive = true }
-                    }
-                }
             ConnectionState.CONNECTED -> {
                 // Only move to Selection if we are currently on the Connectivity screen
                 if (navController.currentDestination?.hasRoute<Connectivity>() == true) {
@@ -168,11 +138,11 @@ fun Navigation(
                 connectedDevice = connectedDevice,
             )
         }
-    ) { _ ->
+    ) { padding ->
         NavHost(
             navController = navController,
             startDestination = Connectivity,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().padding(padding)
         ) {
             composable<Connectivity> {
                 ConnectivityView(
@@ -201,7 +171,9 @@ fun Navigation(
                     coinCount = counter,
                     onSubmit = {
                         println("Submitted: $it")
-                })
+                    },
+                    onWin = { deviceViewModel.dispense(counter) }
+                )
             }
 
             composable<CreateAlbum> {
@@ -211,13 +183,9 @@ fun Navigation(
                     onAlbumsClick = { navController.navigate(MusicApp) },
                     onSongsClick = { navController.navigate(Songs(null)) },
                     onPlayClick = {
-                        val id = app.playerRepo.currentSong.value?.id
+                        val id = playerViewModel.currentSong.value?.id
                         navController.navigate(Play(id))
-                        },
-                    // On a win, pay out the whole jackpot. The ESP runs the
-                    // dispenser motor and notifies the count back down to 0,
-                    // which re-locks play until a new coin is inserted.
-                    onWin = { deviceViewModel.dispense(counter) }
+                    }
                 )
             }
 
@@ -233,7 +201,7 @@ fun Navigation(
                         navController.navigate(EditAlbum(Json.encodeToString(album)))
                     },
                     onPlayClick = {
-                        val id = app.playerRepo.currentSong.value?.id
+                        val id = playerViewModel.currentSong.value?.id
                         navController.navigate(Play(id))
                     })
                 }
@@ -246,7 +214,7 @@ fun Navigation(
                     onAlbumsClick = { navController.navigate(MusicApp) },
                     onSongsClick = { navController.navigate(Songs(null)) },
                     onPlayClick = {
-                        val id = app.playerRepo.currentSong.value?.id
+                        val id = playerViewModel.currentSong.value?.id
                         navController.navigate(Play(id))
                     }
                 )
@@ -262,7 +230,7 @@ fun Navigation(
                     onCreateClick = { navController.navigate(CreateAlbum) },
                     onAlbumsClick = { navController.navigate(MusicApp) },
                     onPlayClick = {
-                        val id = app.playerRepo.currentSong.value?.id
+                        val id = playerViewModel.currentSong.value?.id
                         navController.navigate(Play(id))
                     }
                 )
