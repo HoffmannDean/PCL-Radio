@@ -8,6 +8,8 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import de.luh.hci.pclab.RadioApp
 import de.luh.hci.pclab.apps.music.data.AlbumEntity
 import de.luh.hci.pclab.apps.music.data.DatabaseRepository
+import de.luh.hci.pclab.apps.music.model.Album
+import de.luh.hci.pclab.apps.music.model.toEntity
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -25,15 +27,15 @@ class AlbumsViewModel(
 
     }
 
-    fun createAlbum(name: String) {
+    /*fun createAlbum(name: String) {
        viewModelScope.launch {
            musicRepo.createAlbum(name)
        }
-    }
+    }*/
 
-    fun deleteAlbum(album: AlbumEntity) {
+    fun deleteAlbum(album: Album) {
         viewModelScope.launch {
-            musicRepo.deleteAlbum(album)
+            musicRepo.deleteAlbum(album.toEntity())
         }
     }
 

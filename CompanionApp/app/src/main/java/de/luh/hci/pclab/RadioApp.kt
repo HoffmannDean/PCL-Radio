@@ -20,4 +20,14 @@ class RadioApp : Application() {
     val playerRepo: MusicPlayerRepository by lazy {
         MusicPlayerRepository(this)
     }
+
+    val dbRepo: DatabaseRepository by lazy {
+        val db = AppDatabase.getInstance(this)
+        DatabaseRepository(db.albumDao(), db.songDao(), contentResolver)
+    }
+
+    val playerRepo: MusicPlayerRepository by lazy {
+        val db = AppDatabase.getInstance(this)
+        MusicPlayerRepository(this, db.songDao())
+    }
 }

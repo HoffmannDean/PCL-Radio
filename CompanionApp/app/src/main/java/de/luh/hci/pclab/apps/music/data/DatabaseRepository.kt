@@ -3,6 +3,7 @@ package de.luh.hci.pclab.apps.music.data
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.provider.MediaStore
+import androidx.lifecycle.viewModelScope
 import de.luh.hci.pclab.apps.music.model.Album
 import de.luh.hci.pclab.apps.music.model.Song
 import de.luh.hci.pclab.apps.music.model.toDomain
@@ -10,6 +11,7 @@ import de.luh.hci.pclab.apps.music.model.toEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class DatabaseRepository(
@@ -21,11 +23,23 @@ class DatabaseRepository(
         list -> list.map { it.toDomain() }
     }
 
-    suspend fun createAlbum(name: String): Long =
-        albumDao.insert(AlbumEntity(name = name))
+    suspend fun createAlbum(name: String, artistAl: String, songs: List<Song>): Long {
+        val albumId = albumDao.insert(AlbumEntity(
+            name = name,
+            artistAl = artistAl,
+            durationMs = songs.sumOf { it.durationMs },
+            songCount = songs.size
+        ))
+        songs.forEach { song ->
+            songDao.insert(song.copy(albumId = albumId).toEntity())
+        }
+        return albumId
+    }
 
     suspend fun deleteAlbum(album: AlbumEntity) =
         albumDao.delete(album)
+        //albumDao.update
+
 
     fun getSongsForAlbum(albumId: Long): Flow<List<Song>> =
         songDao.getSongsForAlbum(albumId).map { list -> list.map { it.toDomain() } }
@@ -33,11 +47,28 @@ class DatabaseRepository(
     suspend fun addSongToAlbum(song: Song) =
         songDao.insert(song.toEntity())
 
-    suspend fun removeSongFromAlbum(song: Song) =
-        songDao.delete(song.toEntity())
+    suspend fun removeSongFromAlbum(song: Song?) =
+        if (song != null) {
+            songDao.delete(song.toEntity())
+            val album = albumDao.getAlbumById(song.albumId)
+            if (album != null) {
+                albumDao.updateAlbum(album.copy(
+                    durationMs = album.durationMs - song.durationMs,
+                    songCount = album.songCount - 1
+                ))
+            }
+            else{
+                println("Album is null")
+            }
+        }
+        else{
+            println("Song is null")
+        }
 
-    suspend fun queryDeviceSongs(albumId: Long): List<Song> = withContext(Dispatchers.IO) {
-        val alreadyAdded = songDao.getMediaStoreIdsForAlbum(albumId).toSet()
+
+
+    suspend fun queryDeviceSongs(albumId: Long? = null): List<Song> = withContext(Dispatchers.IO) {
+        val alreadyAdded = if (albumId != null) songDao.getMediaStoreIdsForAlbum(albumId).toSet() else emptySet()
         val songs = mutableListOf<Song>()
 
         val projection = arrayOf(
@@ -74,7 +105,7 @@ class DatabaseRepository(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, msId
                 )
                 songs.add(Song(
-                    albumId      = albumId,
+                    albumId      = albumId ?: 0L,
                     mediaStoreId = msId,
                     uri          = uri,
                     title        = cursor.getString(titleCol) ?: "Unknown",
@@ -88,5 +119,9 @@ class DatabaseRepository(
             }
         }
         songs
+    }
+
+    fun getAllSongs(): Flow<List<Song>> {
+        return songDao.getAllSongs().map { list -> list.map { it.toDomain() } }
     }
 }
