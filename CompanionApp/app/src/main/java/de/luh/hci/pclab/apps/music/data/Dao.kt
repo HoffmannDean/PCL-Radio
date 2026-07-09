@@ -22,7 +22,7 @@ interface AlbumDao {
     suspend fun delete(album: AlbumEntity)
 
     @Update
-    suspend fun update(album: AlbumEntity)
+    suspend fun updateAlbum(album: AlbumEntity)
 }
 
 @Dao

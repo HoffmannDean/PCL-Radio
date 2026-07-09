@@ -38,6 +38,8 @@ class DatabaseRepository(
 
     suspend fun deleteAlbum(album: AlbumEntity) =
         albumDao.delete(album)
+        //albumDao.update
+
 
     fun getSongsForAlbum(albumId: Long): Flow<List<Song>> =
         songDao.getSongsForAlbum(albumId).map { list -> list.map { it.toDomain() } }
@@ -50,7 +52,7 @@ class DatabaseRepository(
             songDao.delete(song.toEntity())
             val album = albumDao.getAlbumById(song.albumId)
             if (album != null) {
-                albumDao.update(album.copy(
+                albumDao.updateAlbum(album.copy(
                     durationMs = album.durationMs - song.durationMs,
                     songCount = album.songCount - 1
                 ))

@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -47,21 +48,28 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TextButton
 import kotlin.Unit
 
 //Shows all albums and allows search of title. Click on album opens list of songs of this album.
-//TODO: Artist adden
+
 @Composable
 fun AlbumsContent(
     albums: List<Album>,
     onAlbumClick: (Album) -> Unit,
+    onEditClick: (Album) -> Unit,
+    onDeleteClick: (Album) -> Unit,
     onHomeClick: () -> Unit,
     onCreateClick: () -> Unit,
     onSongsClick: () -> Unit,
     onPlayClick: () -> Unit
 ) {
+    var selectedAlbum by remember { mutableStateOf<Album?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     val filteredAlbums = albums.filter {
         it.name.contains(searchQuery, ignoreCase = true)
@@ -134,15 +142,53 @@ fun AlbumsContent(
                     .simpleVerticalScrollbar(listState)
             ) {
                 items(filteredAlbums, key = { it.id }) { album ->
-                    AlbumRow(album = album, onClick = { onAlbumClick(album) })
+                    AlbumRow(
+                        album = album,
+                        onClick = { onAlbumClick(album) },
+                        onLongClick = { selectedAlbum = album }
+                    )
                 }
             }}
+    }
+    //Editing Pop-Up
+    selectedAlbum?.let { album ->
+        AlertDialog(
+            onDismissRequest = { selectedAlbum = null },
+            title = { Text(album.name) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = {
+                            selectedAlbum = null
+                            onEditClick(album)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Edit") }
+
+                    Button(
+                        onClick = {
+                            selectedAlbum = null
+                            onDeleteClick(album)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) { Text("Delete") }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { selectedAlbum = null }) { Text("Cancel") }
+            }
+        )
     }
 }
 
 @Composable
 fun AlbumsView(
     onAlbumClick: (Album) -> Unit,
+    onEditClick: (Album) -> Unit,
     onHomeClick: () -> Unit,
     onCreateClick: () -> Unit,
     onSongsClick: () -> Unit,
@@ -153,6 +199,8 @@ fun AlbumsView(
     AlbumsContent(
         albums = albums,
         onAlbumClick = onAlbumClick,
+        onEditClick = onEditClick,
+        onDeleteClick = { viewModel.deleteAlbum(it) },
         onHomeClick = onHomeClick,
         onCreateClick = onCreateClick,
         onSongsClick = onSongsClick,
@@ -163,7 +211,8 @@ fun AlbumsView(
 @Composable
 private fun AlbumRow(
     album: Album,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
     val darkBg = MaterialTheme.colorScheme.surfaceContainerHighest
     Row(
@@ -171,20 +220,14 @@ private fun AlbumRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(darkBg)
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // 1/4 der Breite: Cover (Platzhalter)
-        /*AlbumCover(
-            modifier = Modifier
-                .weight(0.25f)
-                .aspectRatio(1f)
-                .clip(RoundedCornerShape(8.dp))
-        )*/
-
-        // 3/4 der Breite: Titel + Interpret
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(2.dp)
@@ -225,20 +268,6 @@ private fun AlbumRow(
     }
 }
 
-/*@Composable
-private fun AlbumCover(modifier: Modifier = Modifier) {
-    // Platzhalter. Für echtes Cover: Coil AsyncImage(model = album.coverUri, ...) verwenden.
-    androidx.compose.foundation.layout.Box(
-        modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Album,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}*/
 
 
 @Preview(showBackground = true)
@@ -247,6 +276,8 @@ fun AlbumsContentPreview() {
     AlbumsContent(
         albums = listOf(Album(id = 1, name = "Sample 1", durationMs = 3400), Album(id = 2, name = "Sample 2", durationMs = 3400), Album(id = 3, name = "Sample 3", durationMs = 3400), Album(id = 4, name = "Sample 4", durationMs = 3400)),
         onAlbumClick = {},
+        onEditClick = {},
+        onDeleteClick = {},
         onHomeClick = {},
         onCreateClick = {},
         onSongsClick = {},

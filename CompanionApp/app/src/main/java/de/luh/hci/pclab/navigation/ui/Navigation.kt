@@ -45,7 +45,8 @@ object MusicApp
 
 @Serializable
 object CreateAlbum
-
+@Serializable
+data class EditAlbum(val albumJson: String)
 @Serializable
 data class Songs(val albumJson: String? = null)
 @Serializable
@@ -131,6 +132,7 @@ fun Navigation(
 
             composable<CreateAlbum> {
                 CreateView(
+                    album = null,
                     onHomeClick = { navController.navigate(AppSelection) },
                     onAlbumsClick = { navController.navigate(MusicApp) },
                     onSongsClick = { navController.navigate(Songs(null)) },
@@ -148,12 +150,28 @@ fun Navigation(
                     onHomeClick = { navController.navigate(AppSelection) },
                     onCreateClick = { navController.navigate(CreateAlbum) },
                     onSongsClick = { navController.navigate(Songs(null)) },
+                    onEditClick = { album ->
+                        navController.navigate(EditAlbum(Json.encodeToString(album)))
+                    },
                     onPlayClick = {
                         val id = app.playerRepo.currentSong.value?.id
                         navController.navigate(Play(id))
                     })
                 }
-
+            composable<EditAlbum> { backStackEntry ->
+                val route = backStackEntry.toRoute<EditAlbum>()
+                val album = Json.decodeFromString<Album>(route.albumJson)
+                CreateView(
+                    album = album,
+                    onHomeClick = { navController.navigate(AppSelection) },
+                    onAlbumsClick = { navController.navigate(MusicApp) },
+                    onSongsClick = { navController.navigate(Songs(null)) },
+                    onPlayClick = {
+                        val id = app.playerRepo.currentSong.value?.id
+                        navController.navigate(Play(id))
+                    }
+                )
+            }
 
             composable<Songs> { backStackEntry ->
                 val route = backStackEntry.toRoute<Songs>()
