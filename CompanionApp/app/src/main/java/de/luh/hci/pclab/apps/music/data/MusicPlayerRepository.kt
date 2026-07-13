@@ -82,7 +82,7 @@ class MusicPlayerRepository(context: Context, private val songDao: SongDao) {
         player.seekTo(positionMs)
     }
 
-    fun next() {
+    fun next() { //TODO: wenn man einen Song löscht und dann zurück geht, wird die noch angezeigt: die Playlist muss neu laden
         if (currentPlaylist.isEmpty()) return
         currentIndex = (currentIndex + 1) % currentPlaylist.size
         val song = currentPlaylist[currentIndex]

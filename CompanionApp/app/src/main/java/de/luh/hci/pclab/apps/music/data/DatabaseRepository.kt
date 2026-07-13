@@ -23,6 +23,8 @@ class DatabaseRepository(
         list -> list.map { it.toDomain() }
     }
 
+    fun getAllAlbums(): Flow<List<Album>> = albums
+
     suspend fun createAlbum(name: String, artistAl: String, songs: List<Song>): Long {
         val albumId = albumDao.insert(AlbumEntity(
             name = name,
@@ -31,7 +33,7 @@ class DatabaseRepository(
             songCount = songs.size
         ))
         songs.forEach { song ->
-            songDao.insert(song.copy(albumId = albumId).toEntity())
+            songDao.insert(song.copy(albumId = albumId, album = name).toEntity())
         }
         return albumId
     }
@@ -44,8 +46,13 @@ class DatabaseRepository(
     fun getSongsForAlbum(albumId: Long): Flow<List<Song>> =
         songDao.getSongsForAlbum(albumId).map { list -> list.map { it.toDomain() } }
 
-    suspend fun addSongToAlbum(song: Song) =
-        songDao.insert(song.toEntity())
+    fun addSongToAlbum(song: Song, album: Album) {
+        songDao.addSongToAlbum(song.id, album.id)
+        albumDao.updateAlbum(album.copy(
+            songCount = album.songCount + 1,
+            durationMs = album.durationMs + song.durationMs
+        ).toEntity())
+    }
 
     suspend fun removeSongFromAlbum(song: Song?) =
         if (song != null) {

@@ -102,7 +102,7 @@ fun AlbumsContent(
                     IconButton(onClick = onSongsClick) {
                         Icon(Icons.Filled.MusicNote, contentDescription = "Songs")
                     }
-                    IconButton(onClick = onPlayClick) { //TODO: ggf ändern zum Pausenzeichen, wenn Musik läut
+                    IconButton(onClick = onPlayClick) {
                         Icon(Icons.Filled.PlayArrow, contentDescription = "Play")
                     }
                 }
@@ -118,7 +118,7 @@ fun AlbumsContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "All Records",
+                    text = "All Playlists",
                     style = MaterialTheme.typography.headlineMedium
                                 )
                 OutlinedTextField(
@@ -154,7 +154,7 @@ fun AlbumsContent(
     selectedAlbum?.let { album ->
         AlertDialog(
             onDismissRequest = { selectedAlbum = null },
-            title = { Text(album.name) },
+            title = { Text(album.name, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(

@@ -26,7 +26,7 @@ import de.luh.hci.pclab.apps.music.ui.SongsView
 import de.luh.hci.pclab.apps.music.ui.AlbumsView
 import de.luh.hci.pclab.apps.music.ui.CreateView
 import de.luh.hci.pclab.apps.music.ui.PlayView
-import de.luh.hci.pclab.apps.music.ui.PlayerViewModel
+import de.luh.hci.pclab.apps.music.ui.PlayViewModel
 import kotlinx.serialization.json.Json
 import android.Manifest
 import android.content.pm.PackageManager
@@ -92,7 +92,7 @@ fun rememberBluetoothPermission(onGranted: () -> Unit): () -> Unit {
 @Composable
 fun Navigation(
     deviceViewModel: DeviceViewModel = viewModel(factory = DeviceViewModel.Factory),
-    playerViewModel: PlayerViewModel = viewModel(factory = PlayerViewModel.Factory)
+    playerViewModel: PlayViewModel = viewModel(factory = PlayViewModel.Factory)
 ) {
     val navController = rememberNavController()
     val connectedDevice by deviceViewModel.device.collectAsStateWithLifecycle()

@@ -23,9 +23,9 @@ class SongsViewModel(
     val songs: StateFlow<List<Song>> = (if (album == null) repo.getAllSongs() else repo.getSongsForAlbum(album.id))
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun addSong(song: Song) = viewModelScope.launch {
+    /*fun addSong(song: Song) = viewModelScope.launch {
         repo.addSongToAlbum(song.copy(albumId = album?.id ?: 0L))
-    }
+    }*/
 
     fun removeSong(song: Song) = viewModelScope.launch { repo.removeSongFromAlbum(song) }
 

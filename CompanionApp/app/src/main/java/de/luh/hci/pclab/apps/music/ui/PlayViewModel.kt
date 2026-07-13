@@ -9,10 +9,13 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import de.luh.hci.pclab.RadioApp
 import de.luh.hci.pclab.apps.music.data.DatabaseRepository
 import de.luh.hci.pclab.apps.music.data.MusicPlayerRepository
+import de.luh.hci.pclab.apps.music.model.Album
 import de.luh.hci.pclab.apps.music.model.Song
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class PlayViewModel(
@@ -27,6 +30,9 @@ class PlayViewModel(
 
     private val _position = MutableStateFlow(0L)
     val position: StateFlow<Long> = _position
+
+    val allAlbums: StateFlow<List<Album>> = dbRepo.getAllAlbums()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         viewModelScope.launch {
@@ -58,11 +64,21 @@ class PlayViewModel(
             repo.next() //TODO: bei letztem Song in der letzte wechseln zu Default Ansciht
         }
     }
+
+    fun addSongToAlbum(song: Song, album: Album) {
+        dbRepo.addSongToAlbum(song, album)
+    }
     companion object {
         fun provideFactory(songId: Long?): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as RadioApp
                 PlayViewModel(app.playerRepo, app.dbRepo, songId)
+            }
+        }
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as RadioApp
+                PlayViewModel(app.playerRepo, app.dbRepo, null)
             }
         }
     }

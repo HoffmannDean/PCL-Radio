@@ -148,7 +148,7 @@ fun CreateContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Create an Album!\nAll Stored Songs",
+                    text = "Create a Playlist!\nAll Stored Songs:",
                     style = MaterialTheme.typography.headlineMedium,
                     textAlign = TextAlign.Center
                 )

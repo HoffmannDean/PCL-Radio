@@ -122,15 +122,22 @@ fun SongsContent(
                     .padding(top = 60.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    if (album?.id != null){
-                        "All Songs of ${album?.name} - ${album?.artistAl}" //TODO: Anzahl Titel
+                Column {
+                    Text(
+                        text = if (album?.id != null) "All Songs of ${album?.name}" else "All Songs",
+                        style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
+                    )
+                    if (album?.id != null) {
+                        Text(
+                            text = album?.artistAl ?: "",
+                            style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
+                        )
+                        Text(
+                            text = "${album?.songCount} Songs",
+                            style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
+                        )
                     }
-                    else{
-                        "All Songs"
-                    },
-                    style = MaterialTheme.typography.headlineMedium
-                )
+                }
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
@@ -256,8 +263,9 @@ private fun SongRow(
                 val minutes = song.durationMs / 60000
                 val seconds = (song.durationMs % 60000) / 1000
 
+                //TODO: hier nur album anzeigen, wenn alle songs angezeigt werden
                 Text(
-                    text = "${song.album} - %02d:%02d".format(minutes, seconds),
+                    text = "%02d:%02d".format(minutes, seconds),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
