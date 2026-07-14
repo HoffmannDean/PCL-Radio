@@ -308,7 +308,7 @@ fun SongRowSelectable(
                 val minutes = song.durationMs / 60000
                 val seconds = (song.durationMs % 60000) / 1000
                 Text(
-                    text = "${song.album} - %02d:%02d".format(minutes, seconds),
+                    text = "%02d:%02d".format(minutes, seconds),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

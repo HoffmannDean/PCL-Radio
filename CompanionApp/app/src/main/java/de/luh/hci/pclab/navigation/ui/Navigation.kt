@@ -60,7 +60,8 @@ data class EditAlbum(val albumJson: String)
 data class Songs(val albumJson: String? = null)
 @Serializable
 data class Play(
-    val songId: Long? = null
+    val songId: Long? = null,
+    val albumId: Long? = null
     )
 @Serializable
 object CasinoApp
@@ -184,7 +185,7 @@ fun Navigation(
                     onSongsClick = { navController.navigate(Songs(null)) },
                     onPlayClick = {
                         val id = playerViewModel.currentSong.value?.id
-                        navController.navigate(Play(id))
+                        navController.navigate(Play(id, playerViewModel.currentSong.value?.albumId))
                     }
                 )
             }
@@ -202,7 +203,7 @@ fun Navigation(
                     },
                     onPlayClick = {
                         val id = playerViewModel.currentSong.value?.id
-                        navController.navigate(Play(id))
+                        navController.navigate(Play(id, playerViewModel.currentSong.value?.albumId))
                     })
                 }
             composable<EditAlbum> { backStackEntry ->
@@ -215,7 +216,7 @@ fun Navigation(
                     onSongsClick = { navController.navigate(Songs(null)) },
                     onPlayClick = {
                         val id = playerViewModel.currentSong.value?.id
-                        navController.navigate(Play(id))
+                        navController.navigate(Play(id, playerViewModel.currentSong.value?.albumId))
                     }
                 )
             }
@@ -225,13 +226,13 @@ fun Navigation(
                 val album = route.albumJson?.let { Json.decodeFromString<Album>(it) }
                 SongsView(
                     album = album,
-                    onSongClick = { song -> navController.navigate(Play(song.id)) },
+                    onSongClick = { song -> navController.navigate(Play(song.id, album?.id)) },
                     onHomeClick = { navController.navigate(AppSelection) },
                     onCreateClick = { navController.navigate(CreateAlbum) },
                     onAlbumsClick = { navController.navigate(MusicApp) },
                     onPlayClick = {
                         val id = playerViewModel.currentSong.value?.id
-                        navController.navigate(Play(id))
+                        navController.navigate(Play(id, playerViewModel.currentSong.value?.albumId))
                     }
                 )
             }
@@ -239,6 +240,7 @@ fun Navigation(
                 val route = backStackEntry.toRoute<Play>()
                 PlayView(
                     songId = route.songId,
+                    albumId = route.albumId,
                     onHomeClick = { navController.navigate(AppSelection) },
                     onCreateClick = { navController.navigate(CreateAlbum) },
                     onAlbumsClick = { navController.navigate(MusicApp) },

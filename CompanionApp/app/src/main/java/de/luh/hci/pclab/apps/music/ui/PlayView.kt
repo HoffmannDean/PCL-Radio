@@ -59,15 +59,15 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.lifecycle.ViewModel
 
-//TODO: Pop-Up für Hinzufügen/Löschen des Songs zu einem/mehreren Album
 @Composable
 fun PlayView(
     songId: Long?,
+    albumId: Long?,
     onHomeClick: () -> Unit,
     onCreateClick: () -> Unit,
     onAlbumsClick: () -> Unit,
     onSongsClick: () -> Unit,
-    viewModel: PlayViewModel = viewModel(factory = PlayViewModel.provideFactory(songId))
+    viewModel: PlayViewModel = viewModel(factory = PlayViewModel.provideFactory(songId, albumId))
 ) {
     val song by viewModel.currentSong.collectAsStateWithLifecycle()
     val isPlaying by viewModel.isPlaying.collectAsStateWithLifecycle()
@@ -137,7 +137,7 @@ fun PlayContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .navigationBarsPadding() //Todo: ggf. bei allen bars machen
+                        .navigationBarsPadding()
                         .padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
@@ -168,7 +168,6 @@ fun PlayContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
         ) {
             Box(
                 modifier = Modifier
@@ -184,99 +183,115 @@ fun PlayContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Spacer(Modifier.weight(0.6f))
+                Spacer(Modifier.weight(0.3f))
                 Text(title, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 Text(artist, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 Text(albumName, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.weight(0.5f))
+                Spacer(Modifier.weight(0.3f))
 
-                //Todo: das Symbol muss mittig kleiner und größer werden und der hintergrund muss mittig bleiben
                 Box(
                     modifier = Modifier
-                        .weight(1.5f, fill = false)
-                        .sizeIn(maxWidth = 300.dp, maxHeight = 300.dp)
-                        .aspectRatio(1f)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(darkBg)
-                        .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp)),
+                        .weight(1.5f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        Icons.Filled.MusicNote,
-                        contentDescription = null,
+                    Box(
                         modifier = Modifier
-                            .fillMaxSize(0.9f),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                Spacer(Modifier.weight(0.8f))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    if (song?.albumId != 0L){
-                        IconButton(onClick = onRemoveClick, modifier = Modifier.size(32.dp)) {
-                            Icon(Icons.Outlined.Cancel, contentDescription = "Remove", modifier = Modifier.size(20.dp))
-                        }}
-                    IconButton(onClick = { showPlaylistPopup = true }, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Filled.AddCircleOutline, contentDescription = "Add", modifier = Modifier.size(20.dp))
-                    }
-                }
-
-                Slider(
-                    value = progress,
-                    onValueChange = onSeekTo,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 10.dp),
-                    colors = SliderDefaults.colors(
-                        thumbColor = MaterialTheme.colorScheme.primary,
-                        activeTrackColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp, start = 10.dp, end = 10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("%02d:%02d".format(minutes, seconds), style = MaterialTheme.typography.bodySmall)
-                    Text("%02d:%02d".format(totalMin, totalSec), style = MaterialTheme.typography.bodySmall)
-                }
-
-                Spacer(Modifier.height(30.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onPreviousClick) {
-                        Icon(Icons.Filled.SkipPrevious, contentDescription = "Previous", modifier = Modifier.size(40.dp))
-                    }
-                    IconButton(onClick = onPlayPauseClick, modifier = Modifier.size(64.dp)) {
+                            .fillMaxSize()
+                            .sizeIn(maxWidth = 300.dp, maxHeight = 300.dp)
+                            .aspectRatio(1f, matchHeightConstraintsFirst = true)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(darkBg)
+                            .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
-                            if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                            contentDescription = "Play/Pause",
-                            modifier = Modifier.size(48.dp)
+                            Icons.Filled.MusicNote,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(0.9f),
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                    //Todo: funktioniert auch nicht, wenn alle Songs ausgewählt
-                    //TODO: wenn gelöscht wird, muss das richtig gezählt werden
-                    IconButton(onClick = onNextClick) {
-                        Icon(Icons.Filled.SkipNext, contentDescription = "Next", modifier = Modifier.size(40.dp))
+                }
+
+                Spacer(Modifier.weight(0.5f))
+
+                if (song != null) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        if (song.albumId != 0L) {
+                            IconButton(
+                                onClick = onRemoveClick,
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(Icons.Outlined.Cancel, contentDescription = "Remove", modifier = Modifier.size(20.dp))
+                            }
+                        } else {
+                            Spacer(Modifier.size(32.dp))
+                        }
+                        IconButton(
+                            onClick = { showPlaylistPopup = true },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(Icons.Filled.AddCircleOutline, contentDescription = "Add", modifier = Modifier.size(20.dp))
+                        }
+                    }
+
+                    Slider(
+                        value = progress,
+                        onValueChange = onSeekTo,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp),
+                        colors = SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp, start = 10.dp, end = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("%02d:%02d".format(minutes, seconds), style = MaterialTheme.typography.bodySmall)
+                        Text("%02d:%02d".format(totalMin, totalSec), style = MaterialTheme.typography.bodySmall)
+                    }
+
+                    Spacer(Modifier.height(15.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(23.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = onPreviousClick) {
+                            Icon(Icons.Filled.SkipPrevious, contentDescription = "Previous", modifier = Modifier.size(40.dp))
+                        }
+                        IconButton(onClick = onPlayPauseClick, modifier = Modifier.size(64.dp)) {
+                            Icon(
+                                if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                                contentDescription = "Play/Pause",
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+                        IconButton(onClick = onNextClick) {
+                            Icon(Icons.Filled.SkipNext, contentDescription = "Next", modifier = Modifier.size(40.dp))
+                        }
                     }
                 }
+
+                Spacer(Modifier.weight(0.2f))
         }}
 
     }
 }
 
-//TODO: schließt, wenn man adden will
 @Composable
 fun AddToPlaylistDialog(
     albums: List<Album>,
@@ -301,7 +316,7 @@ fun AddToPlaylistDialog(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Add to Playlist:", style = MaterialTheme.typography.titleMedium)
+                Text("Switch to Playlist:", style = MaterialTheme.typography.titleMedium)
                 IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
                     Icon(Icons.Outlined.Cancel, contentDescription = "Close")
                 }

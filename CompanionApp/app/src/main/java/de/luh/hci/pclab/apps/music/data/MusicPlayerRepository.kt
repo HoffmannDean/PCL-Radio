@@ -23,6 +23,9 @@ class MusicPlayerRepository(context: Context, private val songDao: SongDao) {
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying
 
+    private var currentPlaylist: List<Song> = emptyList()
+    private var currentIndex: Int = 0
+
     init {
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -31,16 +34,7 @@ class MusicPlayerRepository(context: Context, private val songDao: SongDao) {
         })
     }
 
-    /*fun play(song: Song) {
-        _currentSong.value = song
-        player.setMediaItem(MediaItem.fromUri(song.uri))
-        player.prepare()
-        player.play()
-    }*/
-
-    suspend fun getSongById(id: Long): Song? {
-        return songDao.getSongById(id)?.toDomain()
-    }
+    suspend fun getSongById(id: Long): Song? = songDao.getSongById(id)?.toDomain()
 
     fun togglePause() {
         if (player.isPlaying) player.pause() else player.play()
@@ -51,54 +45,61 @@ class MusicPlayerRepository(context: Context, private val songDao: SongDao) {
         _currentSong.value = null
     }
 
-    fun release() {
-        player.release()
-    }
+    fun release() = player.release()
 
     fun currentPosition(): Long = player.currentPosition
 
+    fun seekTo(positionMs: Long) = player.seekTo(positionMs)
 
-    private var currentPlaylist: List<Song> = emptyList()
-    private var currentIndex: Int = 0
-
-
-    suspend fun play(song: Song, playlistFlow: Flow<List<Song>>? = null) {
-        if (playlistFlow != null) {
-            currentPlaylist = playlistFlow.first()
-        } 
-        
-        if (currentPlaylist.isEmpty() || currentPlaylist.none { it.mediaStoreId == song.mediaStoreId }) {
-            currentPlaylist = listOf(song)
-        }
-        
-        currentIndex = currentPlaylist.indexOfFirst { it.mediaStoreId == song.mediaStoreId }.coerceAtLeast(0)
+    /** Song abspielen, Queue unangetastet lassen. */
+    private fun playSong(song: Song) {
         _currentSong.value = song
         player.setMediaItem(MediaItem.fromUri(song.uri))
         player.prepare()
         player.play()
     }
 
-    fun seekTo(positionMs: Long) {
-        player.seekTo(positionMs)
+    /** Song abspielen und Queue aus dem Flow setzen. */
+    suspend fun play(song: Song, playlistFlow: Flow<List<Song>>) {
+        val playlist = playlistFlow.first()
+        currentPlaylist = if (playlist.any { it.id == song.id }) playlist else listOf(song)
+        currentIndex = currentPlaylist.indexOfFirst { it.id == song.id }.coerceAtLeast(0)
+        playSong(song)
     }
 
-    fun next() { //TODO: wenn man einen Song löscht und dann zurück geht, wird die noch angezeigt: die Playlist muss neu laden
+    /** Queue neu laden, z.B. nach dem Entfernen eines Songs. */
+    suspend fun refreshPlaylist(playlistFlow: Flow<List<Song>>) {
+        val newList = playlistFlow.first()
+        val currentId = _currentSong.value?.id
+
+        currentPlaylist = newList
+
+        if (newList.isEmpty()) {
+            currentIndex = 0
+            player.stop()
+            player.clearMediaItems()
+            _currentSong.value = null      // ⇒ UI zeigt "No song selected"
+            return
+        }
+
+        val idx = newList.indexOfFirst { it.id == currentId }
+        if (idx >= 0) {
+            currentIndex = idx             // aktueller Song noch da: läuft weiter
+        } else {
+            currentIndex = currentIndex.coerceIn(0, newList.lastIndex)
+            playSong(newList[currentIndex])  // Song ist raus: nächsten anspielen
+        }
+    }
+
+    fun next() {
         if (currentPlaylist.isEmpty()) return
         currentIndex = (currentIndex + 1) % currentPlaylist.size
-        val song = currentPlaylist[currentIndex]
-        _currentSong.value = song
-        player.setMediaItem(MediaItem.fromUri(song.uri))
-        player.prepare()
-        player.play()
+        playSong(currentPlaylist[currentIndex])
     }
 
     fun previous() {
         if (currentPlaylist.isEmpty()) return
         currentIndex = if (currentIndex - 1 < 0) currentPlaylist.size - 1 else currentIndex - 1
-        val song = currentPlaylist[currentIndex]
-        _currentSong.value = song
-        player.setMediaItem(MediaItem.fromUri(song.uri))
-        player.prepare()
-        player.play()
+        playSong(currentPlaylist[currentIndex])
     }
 }

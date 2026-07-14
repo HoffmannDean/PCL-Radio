@@ -265,7 +265,7 @@ private fun SongRow(
 
                 //TODO: hier nur album anzeigen, wenn alle songs angezeigt werden
                 Text(
-                    text = "%02d:%02d".format(minutes, seconds),
+                    text = "${song.album} - %02d:%02d".format(minutes, seconds),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

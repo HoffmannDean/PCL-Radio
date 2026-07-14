@@ -12,6 +12,7 @@ import de.luh.hci.pclab.apps.music.data.MusicPlayerRepository
 import de.luh.hci.pclab.apps.music.model.Album
 import de.luh.hci.pclab.apps.music.model.Song
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,8 @@ import kotlinx.coroutines.launch
 class PlayViewModel(
     private val repo: MusicPlayerRepository,
     private val dbRepo: DatabaseRepository,
-    private val songId: Long?
+    private val songId: Long?,
+    private val albumId: Long?
 ) : ViewModel() {
 
     val currentSong: StateFlow<Song?> = repo.currentSong
@@ -39,14 +41,12 @@ class PlayViewModel(
             if (songId != null) {
                 val song = repo.getSongById(songId)
                 if (song != null && repo.currentSong.value?.id != songId) {
-                    val albumSongs = if (song.albumId != 0L) {
-                        dbRepo.getSongsForAlbum(song.albumId)
-                    } else {
-                        null // Or a flow of all device songs if available
-                    }
-                    repo.play(song, albumSongs)
+                    repo.play(song, playlistFlow)
                 }
             }
+        }
+
+        viewModelScope.launch {
             while (true) {
                 _position.value = repo.currentPosition()
                 delay(500)
@@ -58,27 +58,36 @@ class PlayViewModel(
     fun next() = repo.next()
     fun previous() = repo.previous()
     fun seekTo(positionMs: Long) = repo.seekTo(positionMs)
+
+    private val playlistFlow: Flow<List<Song>>
+        get() = if (albumId != null) dbRepo.getSongsForAlbum(albumId) else dbRepo.getAllSongs()
+
     fun remove() {
+        val current = currentSong.value ?: return
         viewModelScope.launch {
-            currentSong.value?.let { dbRepo.removeSongFromAlbum(it) }
-            repo.next() //TODO: bei letztem Song in der letzte wechseln zu Default Ansciht
+            dbRepo.removeSongFromAlbum(current)
+            repo.refreshPlaylist(playlistFlow)
         }
     }
 
     fun addSongToAlbum(song: Song, album: Album) {
-        dbRepo.addSongToAlbum(song, album)
+        if (song.albumId == album.id) return
+        viewModelScope.launch {
+            dbRepo.addSongToAlbum(song, album)
+            repo.refreshPlaylist(playlistFlow)
+        }
     }
     companion object {
-        fun provideFactory(songId: Long?): ViewModelProvider.Factory = viewModelFactory {
+        fun provideFactory(songId: Long?, albumId: Long?): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as RadioApp
-                PlayViewModel(app.playerRepo, app.dbRepo, songId)
+                PlayViewModel(app.playerRepo, app.dbRepo, songId, albumId)
             }
         }
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as RadioApp
-                PlayViewModel(app.playerRepo, app.dbRepo, null)
+                PlayViewModel(app.playerRepo, app.dbRepo, null, null)
             }
         }
     }

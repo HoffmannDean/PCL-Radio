@@ -10,6 +10,7 @@ import de.luh.hci.pclab.apps.music.model.toDomain
 import de.luh.hci.pclab.apps.music.model.toEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,45 +33,63 @@ class DatabaseRepository(
             durationMs = songs.sumOf { it.durationMs },
             songCount = songs.size
         ))
+
         songs.forEach { song ->
-            songDao.insert(song.copy(albumId = albumId, album = name).toEntity())
+            if (song.albumId != 0L) {
+                songDao.update(song.copy(albumId = albumId, album = name).toEntity())}
+            else{
+                songDao.insert(song.copy(albumId = albumId, album=name).toEntity())
+            }
         }
         return albumId
     }
 
-    suspend fun deleteAlbum(album: AlbumEntity) =
+    suspend fun deleteAlbum(album: AlbumEntity) {
+        val songs = songDao.getSongsForAlbum(album.id).first()
+        songs.forEach { song ->
+            songDao.delete(song)
+        }
         albumDao.delete(album)
-        //albumDao.update
+    }
 
 
     fun getSongsForAlbum(albumId: Long): Flow<List<Song>> =
         songDao.getSongsForAlbum(albumId).map { list -> list.map { it.toDomain() } }
 
-    fun addSongToAlbum(song: Song, album: Album) {
-        songDao.addSongToAlbum(song.id, album.id)
-        albumDao.updateAlbum(album.copy(
-            songCount = album.songCount + 1,
-            durationMs = album.durationMs + song.durationMs
-        ).toEntity())
+    suspend fun addSongToAlbum(song: Song, album: Album) {
+        val songInDb = songDao.getSongById(song.id)
+        if (songInDb != null) {
+            // Already in DB, update albumId
+            songDao.update(songInDb.copy(albumId = album.id))
+        } else {
+            // New from device, insert
+            songDao.insert(song.copy(albumId = album.id).toEntity())
+        }
+        
+        val a = albumDao.getAlbumById(album.id) ?: return
+        albumDao.updateAlbum(
+            a.copy(
+                durationMs = a.durationMs + song.durationMs,
+                songCount = a.songCount + 1
+            )
+        )
     }
 
-    suspend fun removeSongFromAlbum(song: Song?) =
-        if (song != null) {
-            songDao.delete(song.toEntity())
-            val album = albumDao.getAlbumById(song.albumId)
-            if (album != null) {
-                albumDao.updateAlbum(album.copy(
-                    durationMs = album.durationMs - song.durationMs,
-                    songCount = album.songCount - 1
-                ))
-            }
-            else{
-                println("Album is null")
-            }
-        }
-        else{
-            println("Song is null")
-        }
+    suspend fun removeSongFromAlbum(song: Song?) {
+        if (song == null) return
+        val albumId = song.albumId
+        if (albumId == 0L) return
+
+        songDao.delete(song.toEntity())
+
+        val album = albumDao.getAlbumById(albumId) ?: return
+        albumDao.updateAlbum(
+            album.copy(
+                durationMs = (album.durationMs - song.durationMs).coerceAtLeast(0L),
+                songCount = if (album.songCount > 0) album.songCount - 1 else 0
+            )
+        )
+    }
 
 
 
@@ -128,7 +147,6 @@ class DatabaseRepository(
         songs
     }
 
-    fun getAllSongs(): Flow<List<Song>> {
-        return songDao.getAllSongs().map { list -> list.map { it.toDomain() } }
-    }
+    fun getAllSongs(): Flow<List<Song>> =
+        songDao.getAllSongs().map { list -> list.map { it.toDomain() } }
 }

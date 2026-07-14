@@ -22,7 +22,7 @@ interface AlbumDao {
     suspend fun delete(album: AlbumEntity)
 
     @Update
-    fun updateAlbum(album: AlbumEntity)
+    suspend fun updateAlbum(album: AlbumEntity)
 }
 
 @Dao
@@ -36,11 +36,14 @@ interface SongDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(song: SongEntity)
 
-    @Query("UPDATE songs SET albumId = :albumId WHERE id = :songId")
-    fun addSongToAlbum(songId: Long, albumId: Long)
+    @Query("UPDATE songs SET albumId = :albumId, album = :album WHERE id = :songId")
+    suspend fun addSongToAlbum(songId: Long, albumId: Long, album: String?)
 
     @Delete
     suspend fun delete(song: SongEntity)
+
+    @Update
+    suspend fun update(song: SongEntity)
 
     @Query("SELECT * FROM songs ORDER BY title ASC")
     fun getAllSongs(): Flow<List<SongEntity>>
