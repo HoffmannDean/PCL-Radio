@@ -23,14 +23,15 @@ import de.luh.hci.pclab.ui.theme.AppTheme
 @Composable
 fun ConnectivityStatusBar(
     connectedDevice: Device?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    batteryLevel: Int = 0,
 ) {
     val backgroundColor = if (connectedDevice != null) {
         Color(0xFF4CAF50) // Green
     } else {
         MaterialTheme.colorScheme.error
     }
-    
+
     val statusText = if (connectedDevice != null) {
         "Connected to: ${connectedDevice.info.name}"
     } else {
@@ -45,12 +46,22 @@ fun ConnectivityStatusBar(
             .padding(vertical = 4.dp, horizontal = 16.dp),
         contentAlignment = Alignment.Center
     ) {
+        val textColor = if (connectedDevice != null) Color.White else MaterialTheme.colorScheme.onError
         Text(
             text = statusText,
-            color = if (connectedDevice != null) Color.White else MaterialTheme.colorScheme.onError,
+            color = textColor,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold
         )
+        if (connectedDevice != null) {
+            Text(
+                text = "$batteryLevel%",
+                color = textColor,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.CenterEnd)
+            )
+        }
     }
 }
 

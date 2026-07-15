@@ -8,6 +8,15 @@ interface Esp32Repository {
     val availableDevices: StateFlow<List<DeviceInfo>>
     val coinCount: StateFlow<Int>
 
+    /** Battery charge in percent (0..100), pushed from the ESP's Battery Level characteristic. */
+    val batteryLevel: StateFlow<Int>
+
+    /** Currently selected audio source: [SOURCE_DAC], [SOURCE_RADIO] or [SOURCE_MUTE]. */
+    val source: StateFlow<Int>
+
+    /** Current LM1971 attenuation, [VOLUME_LOUD] (loud) .. [VOLUME_MUTE] (quiet). */
+    val volume: StateFlow<Int>
+
     fun startScan()
     fun connect(device: DeviceInfo)
     fun disconnect()
@@ -15,7 +24,7 @@ interface Esp32Repository {
     /** Select what the amplifier plays: [SOURCE_DAC] (music/A2DP), [SOURCE_RADIO], [SOURCE_MUTE]. */
     fun setSource(source: Int)
 
-    /** Set attenuation 0 (loud) .. 63 (mute) on the LM1971. */
+    /** Set attenuation [VOLUME_LOUD] (loud) .. [VOLUME_MUTE] (quiet) on the LM1971. */
     fun setVolume(attenuation: Int)
 
     /** Pay out [coins] on a casino win. The ESP runs the motor and notifies the new count. */
@@ -26,5 +35,9 @@ interface Esp32Repository {
         const val SOURCE_DAC = 0    // Bluetooth audio (A2DP) -> used for the music app
         const val SOURCE_RADIO = 1
         const val SOURCE_MUTE = 2
+
+        // Attenuation range of the Volume characteristic (0 = loudest, 64 = quietest).
+        const val VOLUME_LOUD = 0
+        const val VOLUME_MUTE = 64
     }
 }
