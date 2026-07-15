@@ -21,6 +21,15 @@ class DummyEsp32Repository : Esp32Repository {
     private val _coinCount = MutableStateFlow(10)
     override val coinCount = _coinCount.asStateFlow()
 
+    private val _batteryLevel = MutableStateFlow(85)
+    override val batteryLevel = _batteryLevel.asStateFlow()
+
+    private val _source = MutableStateFlow(Esp32Repository.SOURCE_DAC)
+    override val source = _source.asStateFlow()
+
+    private val _volume = MutableStateFlow(30)
+    override val volume = _volume.asStateFlow()
+
     override fun startScan() {
         _availableDevices.value = listOf(
             DeviceInfo("Dummy ESP32", "00:11:22:33:44:55"),
@@ -41,11 +50,12 @@ class DummyEsp32Repository : Esp32Repository {
     }
 
     override fun setSource(source: Int) {
-        // No-op in dummy
+        _source.value = source
     }
 
     override fun setVolume(attenuation: Int) {
-        // No-op in dummy
+        _volume.value = attenuation
+            .coerceIn(Esp32Repository.VOLUME_LOUD, Esp32Repository.VOLUME_MUTE)
     }
 
     override fun dispense(coins: Int) {

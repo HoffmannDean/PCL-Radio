@@ -14,11 +14,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.luh.hci.pclab.apps.casino.ui.CasinoView
+import de.luh.hci.pclab.apps.radio.ui.RadioControlView
 import de.luh.hci.pclab.apps.selection.ui.SelectionView
 import de.luh.hci.pclab.connectivity.ui.ConnectivityStatusBar
 import de.luh.hci.pclab.connectivity.ui.ConnectivityView
 import de.luh.hci.pclab.apps.music.model.Album
 import de.luh.hci.pclab.radio.data.ConnectionState
+import de.luh.hci.pclab.radio.data.Esp32Repository
 import de.luh.hci.pclab.radio.ui.DeviceViewModel
 import kotlinx.serialization.Serializable
 import androidx.navigation.toRoute
@@ -66,6 +68,9 @@ data class Play(
 @Serializable
 object CasinoApp
 
+@Serializable
+object RadioControl
+
 @RequiresApi(Build.VERSION_CODES.S)
 private val btPermissions = arrayOf(
     Manifest.permission.BLUETOOTH_CONNECT,
@@ -100,6 +105,9 @@ fun Navigation(
     val connectionState by deviceViewModel.connectionState.collectAsStateWithLifecycle()
     val availableDevices by deviceViewModel.availableDevices.collectAsStateWithLifecycle()
     val counter by deviceViewModel.counter.collectAsStateWithLifecycle()
+    val batteryLevel by deviceViewModel.batteryLevel.collectAsStateWithLifecycle()
+    val source by deviceViewModel.source.collectAsStateWithLifecycle()
+    val volume by deviceViewModel.volume.collectAsStateWithLifecycle()
 
     val requestScan = rememberBluetoothPermission {
         deviceViewModel.searchAvailableDevices()
@@ -137,6 +145,7 @@ fun Navigation(
         topBar = {
             ConnectivityStatusBar(
                 connectedDevice = connectedDevice,
+                batteryLevel = batteryLevel,
             )
         }
     ) { padding ->
@@ -162,6 +171,7 @@ fun Navigation(
                         when (app.id) {
                             "casino" -> navController.navigate(CasinoApp)
                             "music" -> navController.navigate(MusicApp)
+                            "radio" -> navController.navigate(RadioControl)
                         }
                     }
                 )
@@ -174,6 +184,21 @@ fun Navigation(
                         println("Submitted: $it")
                     },
                     onWin = { deviceViewModel.dispense(counter) }
+                )
+            }
+
+            composable<RadioControl> {
+                RadioControlView(
+                    batteryLevel = batteryLevel,
+                    source = source,
+                    volume = volume,
+                    onSelectSource = { selected ->
+                        when (selected) {
+                            Esp32Repository.SOURCE_RADIO -> deviceViewModel.selectRadioSource()
+                            else -> deviceViewModel.selectMusicSource()
+                        }
+                    },
+                    onVolumeChange = { deviceViewModel.setVolume(it) }
                 )
             }
 

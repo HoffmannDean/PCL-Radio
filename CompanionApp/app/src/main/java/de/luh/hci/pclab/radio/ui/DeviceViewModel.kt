@@ -31,6 +31,11 @@ class DeviceViewModel(
     // Jackpot, pushed from the ESP via CoinCount notifications.
     val counter: StateFlow<Int> = esp32repo.coinCount
 
+    // Amplifier state, driven by the ESP (battery notifies; source/volume read on connect).
+    val batteryLevel: StateFlow<Int> = esp32repo.batteryLevel
+    val source: StateFlow<Int> = esp32repo.source
+    val volume: StateFlow<Int> = esp32repo.volume
+
     private var pendingDevice: DeviceInfo? = null
 
     init {
@@ -62,6 +67,10 @@ class DeviceViewModel(
     /** Switch the amplifier to Bluetooth audio (A2DP) for the music app. */
     fun selectMusicSource() = esp32repo.setSource(Esp32Repository.SOURCE_DAC)
 
+    /** Switch the amplifier to the analog radio input. */
+    fun selectRadioSource() = esp32repo.setSource(Esp32Repository.SOURCE_RADIO)
+
+    /** Set attenuation: 0 = loudest, 64 = quietest. */
     fun setVolume(attenuation: Int) = esp32repo.setVolume(attenuation)
 
     /** Pay out the whole jackpot on a casino win; the ESP resets the count. */
