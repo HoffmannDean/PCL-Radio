@@ -11,7 +11,7 @@ import de.luh.hci.pclab.radio.data.Esp32Repository
 class RadioApp : Application() {
 
     val esp32Repo: Esp32Repository by lazy {
-        val useDummy = true // Change to false for real hardware
+        val useDummy = false // Change to false for real hardware
         if (useDummy) {
             DummyEsp32Repository()
         } else {

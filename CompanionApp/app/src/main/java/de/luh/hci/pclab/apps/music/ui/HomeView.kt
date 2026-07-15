@@ -70,7 +70,7 @@ fun MusicHomeContent(
         Color(0xFF4DD0E1), Color(0xFFFFB74D), Color(0xFFF06292),
     )
 
-    val darkBg = MaterialTheme.colorScheme.surfaceContainerHighest
+    val darkBg = MaterialTheme.colorScheme.surfaceContainer
 
     Scaffold(
         bottomBar = {

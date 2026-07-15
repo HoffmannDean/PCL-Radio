@@ -113,7 +113,7 @@ fun PlayContent(
     onAlbumsClick: () -> Unit,
     onSongsClick: () -> Unit,
 ) {
-    val darkBg = MaterialTheme.colorScheme.surfaceContainerHighest
+    val darkBg = MaterialTheme.colorScheme.surfaceContainer
     var showPlaylistPopup by remember { mutableStateOf(false) }
 
     if (showPlaylistPopup) {

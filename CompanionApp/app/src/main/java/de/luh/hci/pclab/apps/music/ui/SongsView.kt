@@ -82,7 +82,7 @@ fun SongsContent(
         it.title.contains(searchQuery, ignoreCase = true)
     }
 
-    val darkBg = MaterialTheme.colorScheme.surfaceContainerHighest
+    val darkBg = MaterialTheme.colorScheme.surfaceContainer
     val listState = rememberLazyListState()
 
     Scaffold(
@@ -128,7 +128,9 @@ fun SongsContent(
                 Column {
                     Text(
                         text = if (album?.id != null) "All Songs of ${album?.name}" else "All Songs",
-                        style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
+                        style = MaterialTheme.typography.headlineMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(top=8.dp)
                     )
                     if (album?.id != null) {
                         Text(
@@ -155,7 +157,7 @@ fun SongsContent(
 
             LazyColumn(
                 state = listState,
-                contentPadding = PaddingValues(8.dp),
+                contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.simpleVerticalScrollbar(listState)
                     .weight(1f)
@@ -219,7 +221,7 @@ private fun SongRow(
     song: Song,
     onClick: () -> Unit
 ) {
-    val darkBg = MaterialTheme.colorScheme.surfaceContainerHighest
+    val darkBg = MaterialTheme.colorScheme.surfaceContainer
     Row(
         modifier = Modifier
             .fillMaxWidth()

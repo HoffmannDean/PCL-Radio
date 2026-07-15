@@ -77,7 +77,7 @@ fun AlbumsContent(
         it.name.contains(searchQuery, ignoreCase = true)
     }
 
-    val darkBg = MaterialTheme.colorScheme.surfaceContainerHighest
+    val darkBg = MaterialTheme.colorScheme.surfaceContainer
     val listState = rememberLazyListState()
 
     Scaffold(
@@ -122,8 +122,9 @@ fun AlbumsContent(
             ) {
                 Text(
                     text = "All Playlists",
-                    style = MaterialTheme.typography.headlineMedium
-                                )
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(top=8.dp)
+                )
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
@@ -138,7 +139,7 @@ fun AlbumsContent(
 
             LazyColumn(
                 state = listState,
-                contentPadding = PaddingValues(8.dp),
+                contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.simpleVerticalScrollbar(listState)
                     .weight(1f)
@@ -217,7 +218,7 @@ private fun AlbumRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
-    val darkBg = MaterialTheme.colorScheme.surfaceContainerHighest
+    val darkBg = MaterialTheme.colorScheme.surfaceContainer
     Row(
         modifier = Modifier
             .fillMaxWidth()

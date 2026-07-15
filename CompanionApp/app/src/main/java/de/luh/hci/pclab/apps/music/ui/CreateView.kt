@@ -88,7 +88,7 @@ fun CreateContent(
 
     val sortedSongs = filteredSong.sortedByDescending { it.mediaStoreId in selectedIds }
     val coroutineScope = rememberCoroutineScope()
-    val darkBg = MaterialTheme.colorScheme.surfaceContainerHighest
+    val darkBg = MaterialTheme.colorScheme.surfaceContainer
     val listState = rememberLazyListState()
 
     Scaffold(
@@ -162,7 +162,8 @@ fun CreateContent(
                 Text(
                     text = "Create a Playlist!\nAll Stored Songs:",
                     style = MaterialTheme.typography.headlineMedium,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top=8.dp)
                 )
                 OutlinedTextField(
                     value = searchQuery,
@@ -178,7 +179,7 @@ fun CreateContent(
 
             LazyColumn(
                 state = listState,
-                contentPadding = PaddingValues(8.dp),
+                contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.simpleVerticalScrollbar(listState)
                     .weight(1f)
