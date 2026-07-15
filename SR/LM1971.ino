@@ -11,6 +11,7 @@ int LM1971::getAttenuation()
 void LM1971::setAttenuation(int attenuation) 
 {
   this->Attenuation = constrain(attenuation, 0, 64);
+  ble_attenuation = this->Attenuation; 
   if(this->Mute == false)
   {
     this->lm1971Write(this->Attenuation);
@@ -72,10 +73,13 @@ void LM1971::lm1971Write(uint16_t value)
   // Andere Teilnehmer deaktivieren
   digitalWrite(PIN_SD_CS, HIGH);
   digitalWrite(PIN_LM1971_CS, LOW);
-
+  delay(1);
   spi.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE1));
   spi.transfer16(value);
   spi.endTransaction();
 
   digitalWrite(PIN_LM1971_CS, HIGH);
+  delay(1);
+  ble_attenuation = this->Attenuation;
+  volumeChar->setValue(&ble_attenuation,1);
 }
