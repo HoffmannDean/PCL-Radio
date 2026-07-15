@@ -59,9 +59,9 @@ class CreateViewModel(
 
     fun createAlbum(name: String, artist: String, songs: List<Song>, album: Album?) = viewModelScope.launch {
         repo.createAlbum(name, artist, songs)
-        /*if (album != null) {
+        if (album != null) {
             repo.deleteAlbum(album.toEntity())
-        }*/
+        }
     }
 
     companion object {

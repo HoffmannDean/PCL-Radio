@@ -36,6 +36,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import de.luh.hci.pclab.apps.music.model.Album
 import de.luh.hci.pclab.apps.music.model.Song
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.filled.AddBox
@@ -84,6 +86,7 @@ fun SongsContent(
     val listState = rememberLazyListState()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
 
             Column(
@@ -95,7 +98,7 @@ fun SongsContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 20.dp),
+                        .padding(top = 8.dp, bottom = 10.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                 IconButton(onClick = onHomeClick) {
@@ -119,7 +122,7 @@ fun SongsContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(darkBg)
-                    .padding(top = 60.dp),
+                    .statusBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Column {

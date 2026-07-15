@@ -10,10 +10,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -89,13 +92,17 @@ fun CreateContent(
     val listState = rememberLazyListState()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             Column(
                 modifier = Modifier.fillMaxWidth().background(darkBg)
             ) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.primary, thickness = 1.dp)
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 20.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        //.navigationBarsPadding()
+                        .padding(top = 8.dp, bottom = 10.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     IconButton(onClick = onHomeClick) {
@@ -139,12 +146,17 @@ fun CreateContent(
             }
         }
     ) { innerPadding ->
-        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = innerPadding.calculateBottomPadding())
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(darkBg)
-                    .padding(top = 60.dp),
+                    .background(darkBg)        // läuft jetzt bis Bildschirmoberkante
+                    .statusBarsPadding(),
+                    //.padding(top = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -338,7 +350,7 @@ fun CreateDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (editingAlbum != null) "Edit Album!" else "Create a New Album!") },
+        title = { Text(if (editingAlbum != null) "Edit Album!" else "Create a New Playlist!") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("$selectedCount Selected Songs", style = MaterialTheme.typography.bodySmall)

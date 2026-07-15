@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -79,6 +81,7 @@ fun AlbumsContent(
     val listState = rememberLazyListState()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
 
             Column(
@@ -90,7 +93,7 @@ fun AlbumsContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 20.dp),
+                        .padding(top = 8.dp, bottom = 10.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     IconButton(onClick = onHomeClick) {
@@ -114,7 +117,7 @@ fun AlbumsContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(darkBg)
-                    .padding(top = 60.dp),
+                    .statusBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(

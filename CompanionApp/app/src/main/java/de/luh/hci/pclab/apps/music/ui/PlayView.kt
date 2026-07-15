@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import de.luh.hci.pclab.apps.music.model.Album
 import de.luh.hci.pclab.apps.music.model.Song
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,6 +58,7 @@ import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 
 @Composable
@@ -126,6 +128,7 @@ fun PlayContent(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
 
             Column(
@@ -135,11 +138,12 @@ fun PlayContent(
             ) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.primary, thickness = 1.dp)
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            //.navigationBarsPadding()
+                            .padding(top = 8.dp, bottom = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+
                 ) {
                     IconButton(onClick = onHomeClick) {
                         Icon(Icons.Filled.Home, contentDescription = "Home")
@@ -175,6 +179,8 @@ fun PlayContent(
                     .fillMaxHeight(0.4f)
                     .background(darkBg)
             )
+
+            //HorizontalDivider(color = MaterialTheme.colorScheme.primary, thickness = 1.dp)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -184,9 +190,29 @@ fun PlayContent(
                 verticalArrangement = Arrangement.Center
             ) {
                 Spacer(Modifier.weight(0.3f))
-                Text(title, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                Text(artist, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                Text(albumName, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                Box(
+                    modifier = Modifier
+                        .height(80.dp)
+                        .fillMaxWidth(0.9f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    var titleSize by remember(title) { mutableStateOf(32.sp) }
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontSize = titleSize,
+                        maxLines = 2,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        onTextLayout = { result ->
+                            if (result.hasVisualOverflow && titleSize > 16.sp) {
+                                titleSize *= 0.95f
+                            }
+                        }
+                    )
+                }
+                Text("Artist: ${artist}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                Text("Album: ${albumName}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.weight(0.3f))
 
                 Box(
